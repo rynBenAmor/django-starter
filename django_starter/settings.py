@@ -1,6 +1,7 @@
 
 from pathlib import Path
 from decouple import config
+from django.urls import reverse_lazy
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -68,11 +69,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
     #3rd party
     'django.contrib.sites',  # Required
     'allauth',
     'allauth.account',
-    'allauth.socialaccount',
+   
     #local apps
     'accounts',
     'home',#can delete
@@ -95,7 +97,7 @@ ROOT_URLCONF = 'django_starter.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],
+        'DIRS': [BASE_DIR / "templates", BASE_DIR / "accounts/templates",],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -179,6 +181,15 @@ LOCALE_PATHS = [BASE_DIR / "locale"]
 # https://docs.djangoproject.com/en/dev/topics/auth/customizing/#substituting-a-custom-user-model
 AUTH_USER_MODEL = "accounts.User"
 
+AUTHENTICATION_BACKENDS = [
+
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by email
+    'allauth.account.auth_backends.AuthenticationBackend',
+
+]
 # https://docs.djangoproject.com/en/dev/ref/settings/#site-id
 SITE_ID = 1
 
@@ -186,6 +197,7 @@ SITE_ID = 1
 ACCOUNT_SIGNUP_FIELDS = ['username', 'email*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 LOGIN_REDIRECT_URL = '/'
+ACCOUNT_LOGOUT_REDIRECT_URL = reverse_lazy("account_logout")
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_UNIQUE_EMAIL = True

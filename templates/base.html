@@ -2,10 +2,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="..." crossorigin="anonymous">
+
     <link rel="stylesheet" href="{% static 'style.css' %}">
+
+    <title>{% block title %}{% endblock title %}</title>
+    
+
+    {% block extra_head %}{% endblock extra_head %}     
+
 </head>
+
+
 <body>
-    {% block content %}{% endblock %}
-    <script src="{% static 'main.js' %}"></script>
+    {% include 'includes/navbar.html' %}
+    <!--main content-->
+    <main class="p-5">
+    {% block content %}
+
+    {% endblock %}
+    </main>
+
+
+    {% include 'includes/footer.html' %}
+
+    <script src="{% static 'main.js' %}" defer></script>
+    {% block extra_js %}{% endblock extra_js %}       
 </body>
+
+
 </html>
