@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found</title>
+    <style>
+        /* Resetting margin and padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Basic Styles */
+        html, body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 7rem;
+            color: red;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            margin-bottom: 20px;
+            color: #ecf0f1;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            color: #bdc3c7;
+        }
+
+        a {
+            display: inline-block;
+            font-size: 1rem;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 30px;
+            border: 2px solid #f39c12;
+            border-radius: 30px;
+            background: #f39c12;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        a:hover {
+            background: transparent;
+            color: #f39c12;
+            box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .icon {
+            font-size: clamp(4rem, 7vw, 8rem);
+            color: red;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+
+
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 6rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            a {
+                font-size: 1rem;
+                padding: 10px 25px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 5rem;
+            }
+
+            h2 {
+                font-size: 1.2rem;
+            }
+
+            .message {
+                font-size: 1rem;
+            }
+
+            a {
+                font-size: 0.9rem;
+                padding: 8px 20px;
+            }
+
+            .icon {
+                font-size: 5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="icon">
+            &#9888; <!-- Warning Icon -->
+        </div>
+        <div class="title-container">
+            <h1>404</h1>
+        </div>
+
+
+        <h2>Oops ! Cette page n'existe pas.</h2>
+        <p class="message">
+            Il semble que vous ayez rencontré un lien brisé ou une URL non valide. Veuillez vérifier l'adresse ou
+            retourner à la page principale.
+        </p>
+        <a href="/">Revenir à la page d'accueil</a>
+    </div>
+
+</body>
+
+</html>

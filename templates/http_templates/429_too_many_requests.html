@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 - Accès interdit</title>
+
+    <style>
+        /* Resetting margin and padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Basic Styles */
+        html,
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #ffffff;
+            text-align: center;
+
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            margin-bottom: 20px;
+            color: #f39c12;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            color: #bdc3c7;
+            padding: 0 10px;
+        }
+
+        a {
+            color: #ffffff;
+        }
+
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+        }
+
+        @media (max-width: 480px) {
+
+            h2 {
+                font-size: 1.2rem;
+            }
+
+            .message {
+                font-size: 1rem;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <img src="{% static 'images/accounts/403_prohibited.svg' %}" alt="403 img" draggable="false">
+
+        <h2>Attention ! Trop de Requêtes</h2>
+        <p class="message">
+            Trop de tentatives de connexion. Veuillez réessayer plus tard ou <a href="{% url 'notifications:contact' %}">contactez</a> notre équipe d'assistance. 
+            <a href="/">Retourner à la page principale</a>.
+        </p>
+        
+
+    </div>
+</body>
+
+</html>
