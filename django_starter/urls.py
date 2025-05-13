@@ -1,5 +1,7 @@
 
 """
+    https://github.com/pennersr/django-allauth/tree/main/allauth/templates/account
+    
     Auth Routes:
     ─────────────────────────────────────────────────────────────
     URL Name                        | Path (under /accounts/)
