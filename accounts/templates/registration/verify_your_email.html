@@ -1,0 +1,23 @@
+
+{% extends 'emails/email_base.html' %}
+
+{% block email_subject %}
+    Bonjour Mr/Mme {{ user.get_full_name|capfirst }},
+{% endblock email_subject %}
+
+{% block email_body_p1 %}
+    Merci de vous être inscrit chez sté. Pour activer votre compte et poursuivre le processus
+    d'inscription, cliquez sur le bouton ci-dessous :
+{% endblock email_body_p1 %}
+    
+{% block email_body_p2 %}
+    Si vous ne vous êtes pas inscrit, veuillez ignorer cet e-mail.
+{% endblock email_body_p2 %}
+
+
+{% block email_button_link %}{{ activation_link }}{% endblock email_button_link %}
+    
+
+{% block email_button_label %}
+    activer mon compte FBS
+{% endblock email_button_label %}

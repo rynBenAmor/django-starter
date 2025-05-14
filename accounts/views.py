@@ -14,11 +14,11 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 import time
 from django.conf import settings
-from .utils import send_confirmation_email
+from .utils import send_verification_email
 
 
 
-def confirm_email(request, uidb64, token, timestamp):
+def verify_email(request, uidb64, token, timestamp):
 
     TOKEN_EXPIRATION_TIME = 86400  # 1 day
 
@@ -82,7 +82,7 @@ def login_view(request):
                     return HttpResponseRedirect(resolve_url(next_url))
                 
                 else:
-                    send_confirmation_email(request, user)#resend the email
+                    send_verification_email(request, user) #resend the email
                     messages.warning(request, _("make sure to check you email for a verification link, check your spam as well "))
                     return HttpResponseRedirect("accounts:login")
 
@@ -101,15 +101,14 @@ def login_view(request):
 
 
 
-
 def logout_view(request):
     logout(request)
-    return redirect('accounts:login')  # or any other named URL or path
+    return redirect('accounts:login')
 
 
 @login_required
 def profile_view(request):
-    return render(request, "registration/profile.html", {"user": request.user})
+    return render(request, "accounts/profile.html", {"user": request.user})
 
 
 def set_language(request):

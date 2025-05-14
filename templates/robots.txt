@@ -1,0 +1,10 @@
+User-agent: *
+
+# Disallow private sections
+Disallow: /admin/*
+
+# Allow the homepage and public sections
+Allow: /
+
+
+Sitemap: https://www.example.com/sitemap.xml
