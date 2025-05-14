@@ -1,6 +1,7 @@
 
 from pathlib import Path
 from decouple import config
+from .logging import LOGGING
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
@@ -23,6 +24,8 @@ SECRET_KEY = DJANGO_SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = not DJANGO_IS_PRODUCTION
 
+HTML_MINIFY = True #django-htmlmin
+
 ALLOWED_HOSTS = []
 
 INTERNAL_IPS = ["127.0.0.1"]
@@ -34,22 +37,24 @@ if DJANGO_IS_PRODUCTION :
         ("Administration", config('DJANGO_ADMIN_EMAIL_1', cast=str)),
     ]
 
-SECURE_SSL_REDIRECT = DJANGO_IS_PRODUCTION
+SECURE_SSL_REDIRECT = DJANGO_IS_PRODUCTION #possible infinite redirect error
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')#when nginx does the SSL
 
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_AGE = 5184000 #60 days
 SESSION_COOKIE_SECURE = DJANGO_IS_PRODUCTION # Ensure session cookies are only sent over HTTPS
+SESSION_COOKIE_HTTPONLY = True
 
 CSRF_COOKIE_SECURE = DJANGO_IS_PRODUCTION #Ensure CSRF cookies are only sent over HTTPS
 CSRF_TRUSTED_ORIGINS = [    
         "http://localhost:8000",
         "http://127.0.0.1:8000",  
-        #...#
+        #..add domain in production..#
     ]
 CSRF_COOKIE_HTTPONLY = True
 CSRF_FAILURE_VIEW = "accounts.views.csrf_failure"#to override django's 403_csrf.html in django.views.csrf.csrf_failure
 
-X_FRAME_OPTIONS = 'SAMEORIGIN'  # to allows embedding on the same domain
+X_FRAME_OPTIONS = 'DENY'  # or SAMEORIGIN
 
 SECURE_HSTS_SECONDS = 31536000  # 1 year (adjust as needed)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Apply to all subdomains
@@ -58,11 +63,10 @@ SECURE_HSTS_PRELOAD = True  # Preload into browsers
 #csp policy
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_REFERRER_POLICY = "strict-origin"
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin" # cuz 'strict-origin' breaks HTTP_REFERER
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -72,9 +76,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     #3rd party
-    'django.contrib.sites',  # Required
-    'allauth',
-    'allauth.account',
    
     #local apps
     'accounts',
@@ -89,9 +90,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    #3rd party
+    "htmlmin.middleware.HtmlMinifyMiddleware",
+    "htmlmin.middleware.MarkRequestMiddleware",
+    'django.middleware.locale.LocaleMiddleware',#translation
+    
+    #local
+    'accounts.middlewares.EmailVerificationMiddleware',
 
-    'django.middleware.locale.LocaleMiddleware',
-    "allauth.account.middleware.AccountMiddleware",  # django-allauth
 ]
 
 ROOT_URLCONF = 'django_starter.urls'
@@ -184,28 +191,15 @@ LOCALE_PATHS = [
 
 
 # https://docs.djangoproject.com/en/dev/topics/auth/customizing/#substituting-a-custom-user-model
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.EmailBackend',  # your email auth backend
+]
+
 AUTH_USER_MODEL = "accounts.User"
 
-AUTHENTICATION_BACKENDS = [
-
-    # Needed to login by username in Django admin, regardless of `allauth`
-    'django.contrib.auth.backends.ModelBackend',
-
-    # `allauth` specific authentication methods, such as login by email
-    'allauth.account.auth_backends.AuthenticationBackend',
-
-]
-# https://docs.djangoproject.com/en/dev/ref/settings/#site-id
-SITE_ID = 1
-
-# Allauth settings
-ACCOUNT_SIGNUP_FIELDS = ['username', 'email*', 'password1*', 'password2*']
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 LOGIN_REDIRECT_URL = '/'
-ACCOUNT_LOGOUT_REDIRECT_URL = reverse_lazy("account_logout")
-ACCOUNT_SESSION_REMEMBER = True
-ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_UNIQUE_EMAIL = True
+LOGIN_URL = 'accounts:login'  # Namespace is specified as 'accounts'
+LOGOUT_REDIRECT_URL = 'accounts:login'
 
 
 # Static files (CSS, JavaScript, Images)

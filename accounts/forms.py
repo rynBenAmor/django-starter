@@ -8,3 +8,22 @@ class LanguageTogglerForm(forms.Form):
         choices=settings.LANGUAGES,
         widget=forms.Select(attrs={'onchange': 'this.form.submit();'})
     )
+
+
+class LoginForm(forms.Form):
+
+
+    email = forms.EmailField(max_length=255, required=True,
+                             label=_("email"),
+                             widget= forms.EmailInput(
+                                 attrs={"placeholder": _("email")}
+                             ))
+    
+    password = forms.CharField(
+        label=_("password"),
+        widget= forms.PasswordInput(
+            attrs={
+                "placeholder": _("password")
+            }
+        )
+    )

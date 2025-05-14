@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-14 09:06+0100\n"
+"POT-Creation-Date: 2025-05-14 14:33+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,15 +17,51 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
 #: .\accounts\forms.py:7
 msgid "Select Language"
 msgstr "sélectionner la langue"
 
-#: .\django_starter\settings.py:171
+#: .\accounts\forms.py:17 .\accounts\forms.py:19
+msgid "email"
+msgstr ""
+
+#: .\accounts\forms.py:23 .\accounts\forms.py:26
+msgid "password"
+msgstr ""
+
+#: .\accounts\templates\registration\login.html:4
+#: .\accounts\templates\registration\login.html:12
+#: .\accounts\templates\registration\login.html:33
+msgid "Login"
+msgstr "Se connecter"
+
+#: .\accounts\templates\registration\login.html:41
+msgid "Don’t have an account?"
+msgstr "Vous n’avez pas de compte ?"
+
+#: .\accounts\templates\registration\login.html:42
+#: .\home\templates\home\home.html:30
+msgid "Sign up"
+msgstr "S'inscrire"
+
+#: .\accounts\templates\registration\login.html:45
+msgid "Forgot password?"
+msgstr "Mot de passe oublié?"
+
+#: .\accounts\views.py:39
+msgid "invalid credentials "
+msgstr "informations d'identification non valides"
+
+#: .\accounts\views.py:41
+msgid "please correct the error s of the form"
+msgstr "veuillez corriger les erreurs du formulaire"
+
+#: .\django_starter\settings.py:175
 msgid "English"
 msgstr "Anglais"
 
-#: .\django_starter\settings.py:172
+#: .\django_starter\settings.py:176
 msgid "French"
 msgstr "Français"
 
@@ -44,7 +80,3 @@ msgstr "Bonjour, mr invité"
 #: .\home\templates\home\home.html:27
 msgid "Log in"
 msgstr "Se connecter"
-
-#: .\home\templates\home\home.html:30
-msgid "Sign up"
-msgstr "S'inscrire"

@@ -1,6 +1,0 @@
-{% extends 'base.html' %}
-
-{% block content %}
-    {{ request.user.username }}
-    <a href="{% url 'account_logout' %}" class="btn btn-danger">logout</a>
-{% endblock content %}

@@ -1,0 +1,60 @@
+{% load i18n %}
+{% if messages %}
+<div id="toast-container" class="position-fixed bottom-0 start-0 p-3" style="z-index: 1055;">
+    {% for message in messages %}
+    <div class="toast show mb-3 shadow-lg {% if message.level_tag %}bg-{{ message.level_tag }}{% else %}bg-light{% endif %}" 
+         role="alert" 
+         aria-live="assertive" 
+         aria-atomic="true"
+         data-bs-autohide="true"
+         data-bs-delay="5000">
+        
+        <div class="toast-header bg-white">
+            <i class="fa
+                {% if message.level_tag == 'success' %}fa-check-circle text-success
+                {% elif message.level_tag == 'error' %}fa-times-circle text-danger
+                {% elif message.level_tag == 'warning' %}fa-exclamation-triangle text-warning
+                {% elif message.level_tag == 'info' %}fa-info-circle text-info
+                {% else %}fa-bell text-secondary
+                {% endif %} me-2"></i>
+            
+            <strong class="me-auto">
+                {% if message.level_tag == 'success' %}{% translate 'Succès' %}
+                {% elif message.level_tag == 'error' %}{% translate 'Erreur' %}
+                {% elif message.level_tag == 'warning' %}{% translate 'Avertissement' %}
+                {% elif message.level_tag == 'info' %}{% translate 'Information' %}
+                {% else %}Notification
+                {% endif %}
+            </strong>
+            
+            <small class="text-muted ms-2">{% now "H:i" %}</small>
+            <button type="button" class="btn-close ms-2" data-bs-dismiss="toast" aria-label="Fermer"></button>
+        </div>
+        
+        <div class="toast-body fw-semibold">
+            {{ message }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+
+<style>
+    
+    /* Responsive positioning */
+    @media (max-width: 576px) {
+        #toast-container {
+            width: 100%;
+            padding: 0;
+        }
+        .toast {
+            width: 100%;
+            margin-bottom: 0;
+            border-radius: 0;
+        }
+    }
+</style>
+
+
+{% endif %}

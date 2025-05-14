@@ -1,3 +1,4 @@
+//npx vite build
 import { resolve } from 'path';
 
 export default {
@@ -10,7 +11,7 @@ export default {
         style: resolve(__dirname, 'assets/scss/main.scss'),
       },
       output: {
-        entryFileNames: '[name].js',         // disables hashed names
+        entryFileNames: '[name].js',         // disables hashed names as django handles versioning
         assetFileNames: '[name].css',
       },
     },

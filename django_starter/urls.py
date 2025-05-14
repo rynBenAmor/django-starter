@@ -34,14 +34,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
-from accounts.views import set_language
+
 
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('allauth.urls')),#check source code
-    path('set-language/', set_language, name='set_language'),
+    path('accounts/', include('accounts.urls')),#check source code
 
     path('', include('home.urls')),#can delete
 ]
