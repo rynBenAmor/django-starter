@@ -2,6 +2,7 @@
 from pathlib import Path
 from decouple import config
 from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -89,6 +90,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
+    'django.middleware.locale.LocaleMiddleware',
     "allauth.account.middleware.AccountMiddleware",  # django-allauth
 ]
 
@@ -104,6 +106,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'accounts.context_processors.current_language_context',
             ],
         },
     },
@@ -132,8 +136,8 @@ else:  # Switch to PostgreSQL
             'NAME': config('DB_NAME'),
             'USER': config('DB_USER'),
             'PASSWORD': config('DB_PASSWORD'),
-            'HOST': config("DB_HOST"),
-            'PORT': config('DB_PORT', default='5432'),
+            'HOST': config('DB_HOST'),
+            'PORT': config('DB_PORT', default='5432', cast=int),
         }
     }
 
@@ -160,22 +164,23 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 
 # Supported languages (language codes must match the ones in locale folders)
 LANGUAGES = [
-    ('en', 'English'),
-    ('fr', 'French'),
+    ('en', _('English')),
+    ('fr', _('French')),
 ]
 
 TIME_ZONE = 'Africa/Tunis'
-
 USE_I18N = True
-
+USE_L10N = True
 USE_TZ = True
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#locale-paths
-LOCALE_PATHS = [BASE_DIR / "locale"]
+LOCALE_PATHS = [
+    BASE_DIR / "locale",
+]
 
 
 # https://docs.djangoproject.com/en/dev/topics/auth/customizing/#substituting-a-custom-user-model

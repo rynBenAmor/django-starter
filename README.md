@@ -8,6 +8,7 @@ This is a personal Django starter template with:
 - Font Awesome Free via cdn
 - Vite for fast bundling (JS & SCSS)
 - Static and media files set up (ready for production)
+- Simple translation toggler (can delete)
 
 ---
 

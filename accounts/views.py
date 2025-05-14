@@ -1,6 +1,21 @@
 from django.shortcuts import render
+from django.conf import settings
+from django.shortcuts import redirect
+from django.utils.translation import activate
+from .forms import LanguageTogglerForm
 
-# Create your views here.
+
+def set_language(request):
+    if request.method == 'POST':
+        form = LanguageTogglerForm(request.POST)
+        if form.is_valid():
+            language = form.cleaned_data['language']
+            activate(language)
+            response = redirect(request.META.get('HTTP_REFERER', '/'))
+            response.set_cookie(settings.LANGUAGE_COOKIE_NAME, language)
+            return response
+    return redirect('/')
+
 
 def custom_404(request, *args, **kwargs):
     return render(request, "http_templates/404.html", status=404)
