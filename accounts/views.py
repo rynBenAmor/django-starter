@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, resolve_url
 from django.urls import reverse
 from django.conf import settings
 from django.utils.translation import activate
-from .forms import *
+
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib.auth import authenticate, login
 from django.utils.translation import gettext_lazy as _
@@ -12,15 +12,19 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
-import time
+from django_ratelimit.decorators import ratelimit
 from django.conf import settings
+
+from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
+from .forms import *
 from .utils import send_verification_email
 
 
 
-def verify_email(request, uidb64, token, timestamp):
+def verify_email(request, uidb64, token, signed_ts):
 
     TOKEN_EXPIRATION_TIME = 86400  # 1 day
+    signer = TimestampSigner()
 
     try:
         uid = urlsafe_base64_decode(uidb64).decode()  # Decode the user ID
@@ -28,36 +32,37 @@ def verify_email(request, uidb64, token, timestamp):
     except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
         user = None
 
-    if user and default_token_generator.check_token(user, token):
-        # Calculate token expiration
-        current_timestamp = int(time.time())
+        # Calculate and check token expiration
         try:
-            token_age = current_timestamp - int(timestamp)
-        except ValueError:
+            signer.unsign(signed_ts, max_age=TOKEN_EXPIRATION_TIME)
+        except (SignatureExpired):
+            messages.error(request, _("Unfortunately it seems that your link has expired"))
+            return render(request, "http_templates/410_token_expired.html", status=410)
+        
+        except (ValueError, BadSignature):
             return render(request, "http_templates/410_invalid_token.html", status=410)
+        
 
+    if user and default_token_generator.check_token(user, token):
+
+        #skip if user is already verified
         if user.is_email_verified:
             messages.info(request, _("your account is already email verified ! it seems you have clicked an old verification link, you can connect directly") )
             return redirect("accounts:login")
 
-        elif token_age <= TOKEN_EXPIRATION_TIME:
+        #check if link is expired
+        else:
             user.is_email_verified = True
             user.save()
             messages.success(request, _("Success! you account is now up and ready to go"))
+            return redirect("accounts:login")        
 
-            return redirect("accounts:login")
-        
-        else:
-
-            return render(
-                request, "http_templates/410_invalid_token.html", status=410
-            )
-    # else
-    return render(request, "http_templates/410_invalid_token.html", status=410)
+    else:
+        return render(request, "http_templates/410_invalid_token.html", status=410)
 
 
 
-
+@ratelimit(key="ip", rate="1/m", method="POST", block=True)
 def login_view(request):
     form = LoginForm(request.POST or None)  # GET requests get an empty form
 
@@ -77,14 +82,16 @@ def login_view(request):
             user = authenticate(request, username=email, password=password)
             if user is not None:  
 
-                if (user.is_staff) or (user.is_email_verified):
+                #user is ok
+                if (user.is_email_verified):
                     login(request, user)
-                    return HttpResponseRedirect(resolve_url(next_url))
+                    return redirect(resolve_url(next_url))
                 
+                #user needs to verify first
                 else:
                     send_verification_email(request, user) #resend the email
                     messages.warning(request, _("make sure to check you email for a verification link, check your spam as well "))
-                    return HttpResponseRedirect("accounts:login")
+                    return redirect("accounts:login")
 
             elif user is None:
                 # Handle invalid credentials

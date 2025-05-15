@@ -8,7 +8,7 @@ from django.urls import reverse
 import time
 from django.conf import settings
 from django.utils.html import strip_tags
-
+from django.core.signing import Signer, TimestampSigner
 
 
 def send_verification_email(request, user):
@@ -17,13 +17,15 @@ def send_verification_email(request, user):
     
     # Get the current timestamp (seconds since the epoch)
     timestamp = int(time.time())
+    signer = TimestampSigner() #cleaner than Signer in this use case
+    signed_timestamp = signer.sign(str(timestamp))
 
     # Encode user ID and timestamp
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     
     # Prepare the URL with the timestamp included
     domain = get_current_site(request).domain
-    link = f"https://{domain}{reverse('accounts:confirm_email', kwargs={'uidb64': uid, 'token': token, 'timestamp': timestamp})}"
+    link = f"https://{domain}{reverse('accounts:verify_email', kwargs={'uidb64': uid, 'token': token, 'signed_ts': signed_timestamp})}"
 
     subject = 'Activer votre compte'
     html_message = render_to_string('registration/verify_your_email.html', {

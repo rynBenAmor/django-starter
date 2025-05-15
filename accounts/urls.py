@@ -16,7 +16,7 @@ app_name = "accounts"
 urlpatterns = [
     path('set-language/', views.set_language, name='set_language'),
 
-    path('confirm/<str:uidb64>/<str:token>/<int:timestamp>/', views.verify_email, name='confirm_email'),
+    path('verify_email/<str:uidb64>/<str:token>/<str:signed_ts>/', views.verify_email, name='verify_email'),
     path("login/", views.login_view, name="login"),
     path('logout/', views.logout_view, name='logout'),
     path("profile/", views.profile_view, name="profile"),
@@ -29,10 +29,12 @@ urlpatterns = [
         ),
         name="reset_password",
     ),
-    
+
     path('password_reset_confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(
-        success_url=reverse_lazy("accounts:password_reset_complete"),
-    ), name='password_reset_confirm'),
+            success_url=reverse_lazy("accounts:password_reset_complete"),
+        ), 
+        name='password_reset_confirm'
+    ),
 
     path('password_reset_done/', PasswordResetDoneView.as_view(), name='password_reset_done'),
 
