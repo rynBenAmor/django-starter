@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-14 14:33+0100\n"
+"POT-Creation-Date: 2025-05-15 12:29+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,10 +24,14 @@ msgstr "sélectionner la langue"
 
 #: .\accounts\forms.py:17 .\accounts\forms.py:19
 msgid "email"
-msgstr ""
+msgstr "courrier electronic"
 
 #: .\accounts\forms.py:23 .\accounts\forms.py:26
 msgid "password"
+msgstr "mot de passe"
+
+#: .\accounts\middlewares.py:29
+msgid "You must verify your email to continue."
 msgstr ""
 
 #: .\accounts\templates\registration\login.html:4
@@ -49,21 +53,61 @@ msgstr "S'inscrire"
 msgid "Forgot password?"
 msgstr "Mot de passe oublié?"
 
+#: .\accounts\urls.py:20
+#, fuzzy
+#| msgid "Login"
+msgid "login/"
+msgstr "Se connecter"
+
+#: .\accounts\urls.py:21
+msgid "logout/"
+msgstr "déconnexion"
+
+#: .\accounts\urls.py:22
+msgid "profile/"
+msgstr "profil"
+
 #: .\accounts\views.py:39
+msgid "Unfortunately it seems that your link has expired"
+msgstr ""
+
+#: .\accounts\views.py:50
+msgid ""
+"your account is already email verified ! it seems you have clicked an old "
+"verification link, you can connect directly"
+msgstr ""
+
+#: .\accounts\views.py:57
+msgid "Success! you account is now up and ready to go"
+msgstr ""
+
+#: .\accounts\views.py:93
+msgid ""
+"make sure to check you email for a verification link, check your spam as "
+"well "
+msgstr ""
+
+#: .\accounts\views.py:98
 msgid "invalid credentials "
 msgstr "informations d'identification non valides"
 
-#: .\accounts\views.py:41
-msgid "please correct the error s of the form"
+#: .\accounts\views.py:100
+#, fuzzy
+#| msgid "please correct the error s of the form"
+msgid "please correct the errors of the form"
 msgstr "veuillez corriger les erreurs du formulaire"
 
-#: .\django_starter\settings.py:175
+#: .\django_starter\settings.py:178
 msgid "English"
 msgstr "Anglais"
 
-#: .\django_starter\settings.py:176
+#: .\django_starter\settings.py:179
 msgid "French"
 msgstr "Français"
+
+#: .\django_starter\urls.py:20
+msgid "accounts/"
+msgstr "comptes/"
 
 #: .\home\templates\home\home.html:3
 msgid "Welcome"
@@ -80,3 +124,19 @@ msgstr "Bonjour, mr invité"
 #: .\home\templates\home\home.html:27
 msgid "Log in"
 msgstr "Se connecter"
+
+#: .\templates\includes\toast.html:22
+msgid "Succès"
+msgstr ""
+
+#: .\templates\includes\toast.html:23
+msgid "Erreur"
+msgstr ""
+
+#: .\templates\includes\toast.html:24
+msgid "Avertissement"
+msgstr ""
+
+#: .\templates\includes\toast.html:25
+msgid "Information"
+msgstr ""

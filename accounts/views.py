@@ -125,8 +125,8 @@ def set_language(request):
             language = form.cleaned_data['language']
             activate(language)# exp: activate('fr')
             response = redirect(request.META.get('HTTP_REFERER', '/'))
+            #response = redirect('/') # UNCOMMENT ONLY if using i18npatterns (unpractical)
             response.set_cookie(settings.LANGUAGE_COOKIE_NAME, language)#defaults to 'django_language', auto checks when locale middleware exists
-            print(settings.LANGUAGE_COOKIE_NAME)
             return response
     return redirect('/')
 

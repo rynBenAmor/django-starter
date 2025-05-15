@@ -1,0 +1,8 @@
+{% load form_helpers %}
+
+<form action="{% url 'accounts:set_language' %}" method="POST">
+    {% csrf_token %}
+    {% for field in language_form %}
+    {{ field|add_class:"form-select" }}
+    {% endfor %}
+</form>
