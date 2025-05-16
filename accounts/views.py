@@ -1,4 +1,5 @@
-from django.http import HttpResponseRedirect
+import random
+
 from django.shortcuts import render, redirect, resolve_url
 from django.urls import reverse
 from django.conf import settings
@@ -14,10 +15,13 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django_ratelimit.decorators import ratelimit
 from django.conf import settings
+from django.core.mail import send_mail
 
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from .forms import *
 from .utils import send_verification_email
+from .models import User
+
 
 
 
@@ -82,12 +86,29 @@ def login_view(request):
             user = authenticate(request, username=email, password=password)
             if user is not None:  
 
-                #user is ok
+                # user is ok
                 if (user.is_email_verified):
-                    login(request, user)
-                    return redirect(resolve_url(next_url))
+                    if user.check_2fa_condition:
+                        login(request, user)
+                        return redirect(resolve_url(next_url))
+
+                    # idk generate a 4 digit code and send_mail i guess
+                    else:
+                        # Generate 4-digit code and send it
+                        code = str(random.randint(1000, 9999))
+                        request.session['2fa_user_id'] = user.id
+                        request.session['2fa_code'] = code
+                        request.session.set_expiry(900)  # optional: 15 min expiry
+                        send_mail(
+                            "Your 2FA Code",
+                            f"Your code is: {code}",
+                            settings.DEFAULT_FROM_EMAIL,
+                            [user.email],
+                        )
+                        messages.info(request, _("a 4 digit code was sent to your email inbox"))
+                        return redirect('accounts:verify_2fa')  # your 2FA code input view
                 
-                #user needs to verify first
+                #user needs to verify email first time
                 else:
                     send_verification_email(request, user) #resend the email
                     messages.warning(request, _("make sure to check you email for a verification link, check your spam as well "))
@@ -96,6 +117,7 @@ def login_view(request):
             elif user is None:
                 # Handle invalid credentials
                 form.add_error(None, _("invalid credentials "))
+                messages.error(request, _("invalid credentials "))
         else:
             messages.error(request, _("please correct the errors of the form"))
 
@@ -107,10 +129,32 @@ def login_view(request):
 
 
 
-
+@login_required
 def logout_view(request):
+    user = request.user
+    if user.enabled_2fa:
+        user.is_2fa_authenticated = False
+        user.save(update_fields=['is_2fa_authenticated'])  # safer and faster than .save() with no args
     logout(request)
     return redirect('accounts:login')
+
+
+
+def verify_2fa(request):
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        if code == request.session.get('2fa_code'):
+            user_id = request.session.get('2fa_user_id')
+            user = User.objects.get(id=user_id)
+            user.is_2fa_authenticated = True
+            user.save(update_fields=['is_2fa_authenticated'])
+
+            login(request, user)
+            return redirect('accounts:profile')  # or use `next_url` if you store it
+        else:
+            messages.error(request, "Invalid code")
+    return render(request, 'registration/verify_2fa.html')
+
 
 
 @login_required

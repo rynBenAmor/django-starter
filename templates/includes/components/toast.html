@@ -9,7 +9,7 @@
          data-bs-autohide="true"
          data-bs-delay="5000">
         
-        <div class="toast-header bg-white">
+        <div class="toast-header">
             <i class="fa
                 {% if message.level_tag == 'success' %}fa-check-circle text-success
                 {% elif message.level_tag == 'error' %}fa-times-circle text-danger
@@ -39,20 +39,28 @@
 </div>
 
 
-
 <style>
-    
     /* Responsive positioning */
     @media (max-width: 576px) {
         #toast-container {
             width: 100%;
             padding: 0;
         }
+
         .toast {
             width: 100%;
             margin-bottom: 0;
             border-radius: 0;
         }
+    }
+
+    .bg-error {
+        background-color: #f8d7da;
+        /* Light red */
+        border: 1px solid #f5c6cb;
+        /* Slightly darker red border */
+        color: #721c24;
+
     }
 </style>
 

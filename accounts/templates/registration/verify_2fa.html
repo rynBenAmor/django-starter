@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  2-factor authentication
+{% endblock title %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow rounded-4">
+        <div class="card-body">
+          <h4 class="card-title text-center mb-4">Two-Factor Authentication</h4>
+
+
+          <form method="POST" action="{% url 'accounts:verify_2fa' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="id_2fa_code" class="form-label">Enter the 4-digit code sent to your email:</label>
+              <p class="text-muted small">(viable only for 15 min)</p>
+              <input type="number" maxlength="4" pattern="\d{4}" class="form-control" id="id_2fa_code" name="code" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Verify</button>
+          </form>
+
+          <div class="mt-3 text-center">
+            <small class="text-muted">Didn’t receive a code? <a href="#">Resend</a></small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

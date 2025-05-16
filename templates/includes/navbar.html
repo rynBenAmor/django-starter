@@ -11,9 +11,12 @@
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="/">Home</a>
         </li>
+        {% if request.user.is_authenticated %}
         <li class="nav-item">
-          <a class="nav-link" href="#">Link</a>
+          <a class="nav-link" href="{% url 'accounts:profile' %}">My profile</a>
         </li>
+        {% endif %}
+
 
         <li class="nav-item">
           {% include 'includes/components/language_toggler.html' %}

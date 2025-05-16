@@ -11,6 +11,7 @@
 
     <div class="container">
         <h1>profile of : {{user.username}}</h1>
+        <p class="lead">2fa status: {{ user.enabled_2fa }}</p>
         <a href="/">HOME</a>
         <form method="post" action="{% url 'accounts:logout' %}" class="mt-3">
             {% csrf_token %}

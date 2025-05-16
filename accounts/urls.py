@@ -16,6 +16,7 @@ urlpatterns = [
     path('set-language/', views.set_language, name='set_language'),
 
     path('verify_email/<str:uidb64>/<str:token>/<str:signed_ts>/', views.verify_email, name='verify_email'),
+    path('verify_2fa/', views.verify_2fa, name='verify_2fa'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile_view, name="profile"),

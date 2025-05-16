@@ -5,7 +5,24 @@ from django.contrib.auth.models import AbstractUser
 
 
 class User(AbstractUser):
-    is_email_verified = models.BooleanField(default=False)
+    is_email_verified = models.BooleanField(default=False)#on first signup
+
+    #optional 2fa
+    enabled_2fa = models.BooleanField(default=False)#can enable this through profile lets say
+    is_2fa_authenticated = models.BooleanField(default=False)
 
     def __str__(self):
         return self.email
+    
+    @property
+    def check_2fa_condition(self):
+        if not self.enabled_2fa:
+            return True  # No 2FA? You're good
+
+        elif self.enabled_2fa and self.is_2fa_authenticated:
+            return True  # 2FA enabled and already passed? You're good
+
+        return False  # 2FA enabled but not passed? Block
+
+        
+
