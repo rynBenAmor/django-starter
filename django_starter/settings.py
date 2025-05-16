@@ -15,13 +15,9 @@ DB_TYPE = config('DB_TYPE')
 print(DB_TYPE)
 print(f"----production is set to : {DJANGO_IS_PRODUCTION}-----")
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = DJANGO_SECRET_KEY
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = not DJANGO_IS_PRODUCTION
 
 HTML_MINIFY = True #django-htmlmin
@@ -29,7 +25,6 @@ HTML_MINIFY = True #django-htmlmin
 ALLOWED_HOSTS = []
 
 INTERNAL_IPS = ["127.0.0.1"]
-
 
 #this sends an exception email on production
 if DJANGO_IS_PRODUCTION :
@@ -75,7 +70,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    #3rd party
+    #3rd party apps
    
     #local apps
     'accounts',
