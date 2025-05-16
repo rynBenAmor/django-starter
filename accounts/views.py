@@ -62,7 +62,7 @@ def verify_email(request, uidb64, token, signed_ts):
 
 
 
-@ratelimit(key="ip", rate="1/m", method="POST", block=True)
+@ratelimit(key="ip", rate="10000/m", method="POST", block=True)
 def login_view(request):
     form = LoginForm(request.POST or None)  # GET requests get an empty form
 

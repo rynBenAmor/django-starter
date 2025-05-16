@@ -14,15 +14,19 @@
 </head>
 
 
-<body>
+<body data-bs-theme="light">
 
     {% include 'includes/navbar.html' %}
-    {% include 'includes/toast.html' %}
+    
+    {% include 'includes/components/toast.html' %}
 
     <!--main content-->
     <main>
-        <h3 class="h4 text-center"> view resolver used is  <span class="badge bg-info fw-bold text-dark">{{ request.resolver_match.view_name }}</span> </h3>
 
+        <h3 class="h4 text-primary text-center my-3">
+             DEBUG: view resolver used is  
+             <span class="badge bg-info fw-bold text-dark">{{ request.resolver_match.view_name }}</span> 
+        </h3>
 
         {% block content %}
         {% endblock content %}

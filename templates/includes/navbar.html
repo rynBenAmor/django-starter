@@ -16,55 +16,18 @@
         </li>
 
         <li class="nav-item">
-          {% include 'includes/language_toggler.html' %}
+          {% include 'includes/components/language_toggler.html' %}
         </li>
 
         <li class="nav-item">
-          <button id="id-theme-toggler" class="btn pt-2 d-flex justify-content-center align-items-center gap-1">
-            <i id="id-theme-toggler-sun" class="fa-solid fa-sun text-warning fs-5"></i>
-            <i id="id-theme-toggler-moon" class="fa-solid fa-moon text-muted fs-5"></i>
-            <span class="visually-hidden">Toggle Theme</span>
-          </button>
+          {% include 'includes/components/theme_toggler.html' %}
         </li>
 
       </ul>
-      <form class="d-flex" role="search">
-        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" />
-        <button class="btn btn-outline-success" type="submit">Search</button>
-      </form>
+
+
     </div>
   </div>
 </nav>
 
 
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const toggleButton = document.getElementById('id-theme-toggler');
-    const body = document.body;
-    const sunIcon = document.getElementById("id-theme-toggler-sun");
-    const moonIcon = document.getElementById("id-theme-toggler-moon");
-
-    function applyTheme(theme) {
-      body.setAttribute('data-bs-theme', theme);
-      localStorage.setItem('theme', theme);
-      if (theme === 'dark') {
-        sunIcon.style.display = "none";
-        moonIcon.style.display = "inline";
-      } else {
-        sunIcon.style.display = "inline";
-        moonIcon.style.display = "none";
-      }
-    }
-
-    // Load theme from localStorage (or default to light)
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    applyTheme(savedTheme);
-
-    toggleButton.addEventListener('click', () => {
-      const currentTheme = body.getAttribute('data-bs-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      applyTheme(newTheme);
-    });
-  });
-</script>
