@@ -119,13 +119,18 @@ def profile_view(request):
 
 
 def set_language(request):
+    """
+    if i18npatterns:
+        Preserving context across language boundaries introduces semantic ambiguity and routing instability. 
+        For clarity and consistency, we intentionally reset to the home page.
+    """
     if request.method == 'POST':
         form = LanguageTogglerForm(request.POST)
         if form.is_valid():
             language = form.cleaned_data['language']
             activate(language)# exp: activate('fr')
             response = redirect(request.META.get('HTTP_REFERER', '/'))
-            #response = redirect('/') # UNCOMMENT ONLY if using i18npatterns (unpractical)
+            #response = redirect('/') # UNCOMMENT ONLY if using i18npatterns (unpractical) as redirecting to the HTTP_REFERER preserves the prefix and does nothing even if the session language changes
             response.set_cookie(settings.LANGUAGE_COOKIE_NAME, language)#defaults to 'django_language', auto checks when locale middleware exists
             return response
     return redirect('/')
