@@ -8,7 +8,9 @@ from django.urls import reverse
 import time
 from django.conf import settings
 from django.utils.html import strip_tags
-from django.core.signing import Signer, TimestampSigner
+from django.core.signing import TimestampSigner
+from django.core.mail import EmailMultiAlternatives
+
 
 
 def send_verification_email(request, user):
@@ -42,4 +44,53 @@ def send_verification_email(request, user):
 
     except Exception:
         pass
+
+
+
+
+class EmailMATemplate:
+    """
+    - this is an efficient utility shortcut for creating EmailMultiAlternatives in case of 
+        a for loop mailing on a single SMTP connection (instead of send_mail)
+    - Usage: 
+
+        from django.core.mail import get_connection
+
+        connection = get_connection()  # Reuse the same SMTP connection
+        connection.open()  # Explicitly open once for efficiency
+
+        for user in users:
+        
+            EmailMATemplate(
+                subject="Nouvel arrivage pour vous",
+                template_path="emails/new_arrival_email.html", # relative to 'template/' path of course
+                context={"user_name": user.get_full_name()},
+                to=user.email
+                connection=connection
+            ).send()
+
+        connection.close()
+
+    """
+    def __init__(self, subject:str, template_path:str, context:object = None, from_email:str = None, to:list = None, connection=None):
+        self.subject = subject
+        self.template_path = template_path 
+        self.context = context or {}
+        self.from_email = from_email or settings.DEFAULT_FROM_EMAIL
+        self.to = to if isinstance(to, list) else [to]
+        self.connection = connection
+
+    def send(self):
+        html_body = render_to_string(self.template_path, self.context)
+        text_body = strip_tags(html_body)
+        
+        email = EmailMultiAlternatives(
+            subject=self.subject,
+            body=text_body,
+            from_email=self.from_email,
+            to=self.to,
+        )
+        email.attach_alternative(html_body, "text/html")
+        email.send()
+
 

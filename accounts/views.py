@@ -16,9 +16,12 @@ from django.utils.http import urlsafe_base64_decode
 from django_ratelimit.decorators import ratelimit
 from django.conf import settings
 from django.core.mail import send_mail
-
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
-from .forms import *
+
+from .forms import LoginForm, LanguageTogglerForm
 from .utils import send_verification_email
 from .models import User
 
@@ -158,11 +161,6 @@ def verify_2fa(request):
 
 
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
-
 @require_POST
 @login_required
 def toggle_2fa_status_ajax(request):
@@ -195,6 +193,7 @@ def set_language(request):
             response.set_cookie(settings.LANGUAGE_COOKIE_NAME, language)#defaults to 'django_language', auto checks when locale middleware exists
             return response
     return redirect('/')
+
 
 
 def custom_404(request, *args, **kwargs):
