@@ -87,7 +87,7 @@ def login_view(request):
             if user is not None:  
 
                 # user is ok
-                if (user.is_email_verified):
+                if (user.is_email_verified) or (user.is_staff):
                     if user.check_2fa_condition:
                         login(request, user)
                         return redirect(resolve_url(next_url))
@@ -105,7 +105,7 @@ def login_view(request):
                             settings.DEFAULT_FROM_EMAIL,
                             [user.email],
                         )
-                        messages.info(request, _("a 4 digit code was sent to your email inbox"))
+                        messages.info(request, _("2FA required! a 4 digit code was sent to your email inbox"))
                         return redirect('accounts:verify_2fa')  # your 2FA code input view
                 
                 #user needs to verify email first time
@@ -142,7 +142,7 @@ def logout_view(request):
 
 def verify_2fa(request):
     if request.method == 'POST':
-        code = request.POST.get('code', '').strip()
+        code = request.POST.get('code', '').strip() # 2fa code from input name
         if code == request.session.get('2fa_code'):
             user_id = request.session.get('2fa_user_id')
             user = User.objects.get(id=user_id)
@@ -154,6 +154,23 @@ def verify_2fa(request):
         else:
             messages.error(request, "Invalid code")
     return render(request, 'registration/verify_2fa.html')
+
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+
+@require_POST
+@login_required
+def toggle_2fa_status_ajax(request):
+    user = request.user
+    user.enabled_2fa = not user.enabled_2fa
+    user.save(update_fields=['enabled_2fa'])
+    return JsonResponse({'success': True, 'enabled_2fa': user.enabled_2fa})
+
 
 
 

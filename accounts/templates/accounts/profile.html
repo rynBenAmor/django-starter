@@ -3,7 +3,7 @@
 
 
 {% block title %}
-{% translate 'profile' %}
+    {% translate 'profile' %} - {{user.username}}
 {% endblock title %}
 
 
@@ -11,16 +11,70 @@
 
     <div class="container">
         <h1>profile of : {{user.username}}</h1>
-        <p class="lead">2fa status: {{ user.enabled_2fa }}</p>
-        <a href="/">HOME</a>
-        <form method="post" action="{% url 'accounts:logout' %}" class="mt-3">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="/" />
-            <button type="submit" class="btn btn-outline-danger">
-                <i class="fa-solid fa-right-from-bracket"></i> {% translate 'Log out' %}
-            </button>
 
-        </form>
+        {% with state=user.enabled_2fa %}        
+        
+            <div class="form-check form-switch">
+                
+                <input id="id_2fa_input" class="form-check-input" type="checkbox" 
+                    data-2fa-status="{{state}}" 
+                    {% if state %} checked {% endif %}>
+
+                <label class="form-check-label" id="id_2fa_input_label" for="id_2fa_input">
+                    2FA is {% if state %} enabled {% else %} disabled {% endif %}
+                </label>
+
+            </div>
+
+        {% endwith %}
+
+
+
     </div>
 
 {% endblock content %}
+
+
+{% block extra_js %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const input2fa = document.getElementById('id_2fa_input');
+            const labelInput2fa = document.getElementById('id_2fa_input_label');
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const url = "{% url 'accounts:toggle_2fa_ajax' %}";
+
+            let isProcessing = false;
+
+            input2fa.addEventListener('change', function () {
+                if (isProcessing) return;
+                isProcessing = true;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'MadeWithFetch',
+                    },
+                    mode: 'same-origin'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+
+                            labelInput2fa.innerText = data.enabled_2fa == true ? "2fa is enabled" : "2fa is disabled";
+                        }
+                    })
+                    .catch(err => {
+                        console.error("AJAX error:", err);
+                        input2fa.checked = !input2fa.checked; // revert checkbox
+                    })
+                    .finally(() => {
+                        isProcessing = false;
+                    });
+            });
+        });
+    </script>
+
+{% endblock extra_js %}

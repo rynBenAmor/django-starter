@@ -1,0 +1,67 @@
+<form method="POST" action="{% url 'accounts:verify_2fa' %}">
+    {% csrf_token %}
+
+    <div class="mb-4 text-center shadow-lg p-3 rounded-3">
+        <label for="id_2fa_code" class="form-label h5">Enter the 4-digit code</label>
+        <p class="text-muted mb-3 small">Sent to your email — valid for 15 minutes</p>
+
+        <div class="d-flex justify-content-center gap-2">
+            {% for i in "1234" %}
+            <input type="text" class="form-control text-center fs-4 fw-bold shadow-sm code-input" style="width: 3rem;"
+                maxlength="1" pattern="\d" inputmode="numeric" required>
+            {% endfor %}
+        </div>
+
+        <!--this will actually be processed in the view-->
+        <input type="hidden" name="code" id="id_2fa_code_merged">
+
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">Verify</button>
+</form>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const inputs = document.querySelectorAll(".code-input");
+        const hiddenInput = document.getElementById("id_2fa_code_merged");
+
+        const updateHiddenInput = () => {
+            hiddenInput.value = Array.from(inputs).map(i => i.value).join('');
+        };
+
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.inputType !== "deleteContentBackward" && input.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+                updateHiddenInput();
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && input.value === '' && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = (e.clipboardData || window.clipboardData).getData('text');
+                const digits = pastedData.replace(/\D/g, '').split('').slice(0, inputs.length);
+
+                inputs.forEach((input, i) => {
+                    input.value = digits[i] || '';
+                });
+
+                if (digits.length === inputs.length) {
+                    inputs[inputs.length - 1].focus();
+                } else {
+                    inputs[digits.length]?.focus();
+                }
+
+                updateHiddenInput();
+            });
+        });
+    });
+</script>

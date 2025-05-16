@@ -14,7 +14,7 @@
 </head>
 
 
-<body data-bs-theme="light">
+<body data-bs-theme="light" class="overflow-x-hidden">
 
     {% include 'includes/navbar.html' %}
     
@@ -29,10 +29,14 @@
         </h3>
 
         {% block content %}
+        
         {% endblock content %}
+
 
     </main>
 
+    <!--hidden csrf for ajax-->
+    {% csrf_token %}
 
     {% include 'includes/footer.html' %}
 

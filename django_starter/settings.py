@@ -92,7 +92,10 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',#translation
     
     #local
-    'accounts.middlewares.EmailVerificationMiddleware',
+    'accounts.middlewares.Enforce2FAMiddleware',
+    'accounts.middlewares.AdminAccessMiddleware',
+    'accounts.middlewares.AjaxOnlyMiddleware',
+    
 
 ]
 
