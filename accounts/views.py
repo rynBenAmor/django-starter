@@ -22,9 +22,10 @@ from django.contrib.auth.decorators import login_required
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 
 from .forms import LoginForm, LanguageTogglerForm
-from .utils import send_verification_email
+from .utils import send_verification_email, not_authenticated_required
 from .models import User
-
+from django.utils import timezone
+from datetime import timedelta
 
 
 
@@ -101,7 +102,7 @@ def login_view(request):
                         code = str(random.randint(1000, 9999))
                         request.session['2fa_user_id'] = user.id
                         request.session['2fa_code'] = code
-                        request.session.set_expiry(900)  # optional: 15 min expiry
+                        request.session['2fa_created_at'] = timezone.now().isoformat()
                         send_mail(
                             "Your 2FA Code",
                             f"Your code is: {code}",
@@ -143,21 +144,40 @@ def logout_view(request):
 
 
 
+@not_authenticated_required
+@ratelimit(key="ip", rate="10000/m", method="POST", block=True)
 def verify_2fa(request):
+        
     if request.method == 'POST':
-        code = request.POST.get('code', '').strip() # 2fa code from input name
-        if code == request.session.get('2fa_code'):
-            user_id = request.session.get('2fa_user_id')
-            user = User.objects.get(id=user_id)
-            user.is_2fa_authenticated = True
-            user.save(update_fields=['is_2fa_authenticated'])
+        code = request.POST.get('code', '').strip()
+        session_code = request.session.get('2fa_code')
+        created_at_str = request.session.get('2fa_created_at')
+        user_id = request.session.get('2fa_user_id')
 
-            login(request, user)
-            return redirect('accounts:profile')  # or use `next_url` if you store it
+        if code == session_code and created_at_str and user_id:
+            created_at = timezone.datetime.fromisoformat(created_at_str)
+            if timezone.now() - created_at > timedelta(minutes=15):
+                # Expired
+                for key in ['2fa_code', '2fa_created_at', '2fa_user_id']:
+                    request.session.pop(key, None)
+                messages.error(request, _("Your code has expired, please re-authenticate."))
+                return redirect('accounts:login')
+
+            try:
+                user = User.objects.get(id=user_id)
+                user.is_2fa_authenticated = True
+                user.save(update_fields=['is_2fa_authenticated'])
+                for key in ['2fa_code', '2fa_created', '2fa_user_id']:
+                    request.session.pop(key, None)
+                login(request, user)
+                return redirect('accounts:profile')  # or next_url
+            except User.DoesNotExist:
+                messages.error(request, _("User not found."))
+
         else:
-            messages.error(request, "Invalid code")
-    return render(request, 'registration/verify_2fa.html')
+            messages.error(request, _("Invalid code."))
 
+    return render(request, 'registration/verify_2fa.html')
 
 
 
@@ -175,6 +195,7 @@ def toggle_2fa_status_ajax(request):
 @login_required
 def profile_view(request):
     return render(request, "accounts/profile.html", {"user": request.user})
+
 
 
 def set_language(request):

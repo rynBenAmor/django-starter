@@ -1,6 +1,6 @@
-# middleware/email_verification.py
+# accounts/middleware.py
+
 from django.shortcuts import redirect, render
-from django.urls import resolve
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.utils.translation import gettext_lazy as _
