@@ -10,6 +10,7 @@ from django.conf import settings
 from django.utils.html import strip_tags
 from django.core.signing import TimestampSigner
 from django.core.mail import EmailMultiAlternatives
+import random
 
 
 
@@ -45,6 +46,31 @@ def send_verification_email(request, user):
     except Exception:
         pass
 
+
+
+
+
+
+
+
+def send_2fa_code(request, user, subject="Your 2FA Code", message_template=None):
+    """
+    Generates a 4-digit 2FA code, stores session info, and sends it to the user's email.
+    """
+
+    code = str(random.randint(1000, 9999))
+    request.session['2fa_user_id'] = user.id
+    request.session['2fa_code'] = code
+    request.session['2fa_created_at'] = int(time.time())
+
+    message = message_template or f"Your 2FA code is: {code}"
+
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+    )
 
 
 

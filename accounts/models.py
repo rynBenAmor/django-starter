@@ -13,6 +13,11 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+    def save(self, *args, **kwargs):
+        self.email = self.email.lower().strip() #normalize email
+        super().save(*args, **kwargs)
     
     @property
     def check_2fa_condition(self):
@@ -23,6 +28,11 @@ class User(AbstractUser):
             return True  # 2FA enabled and already passed? You're good
 
         return False  # 2FA enabled but not passed? Block
+    
+    @property
+    def check_if_email_verified(self):
+        return self.is_email_verified or self.is_staff
+
 
         
 

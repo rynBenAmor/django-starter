@@ -15,17 +15,16 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django_ratelimit.decorators import ratelimit
 from django.conf import settings
-from django.core.mail import send_mail
+import time
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 
 from .forms import LoginForm, LanguageTogglerForm
-from .utils import send_verification_email, not_authenticated_required
+from .utils import send_verification_email, not_authenticated_required, send_2fa_code
 from .models import User
-from django.utils import timezone
-from datetime import timedelta
+
 
 
 
@@ -91,24 +90,14 @@ def login_view(request):
             if user is not None:  
 
                 # user is ok
-                if (user.is_email_verified) or (user.is_staff):
+                if user.check_if_email_verified:
                     if user.check_2fa_condition:
                         login(request, user)
                         return redirect(resolve_url(next_url))
 
-                    # idk generate a 4 digit code and send_mail i guess
                     else:
                         # Generate 4-digit code and send it
-                        code = str(random.randint(1000, 9999))
-                        request.session['2fa_user_id'] = user.id
-                        request.session['2fa_code'] = code
-                        request.session['2fa_created_at'] = timezone.now().isoformat()
-                        send_mail(
-                            "Your 2FA Code",
-                            f"Your code is: {code}",
-                            settings.DEFAULT_FROM_EMAIL,
-                            [user.email],
-                        )
+                        send_2fa_code(request, user)
                         messages.info(request, _("2FA required! a 4 digit code was sent to your email inbox"))
                         return redirect('accounts:verify_2fa')  # your 2FA code input view
                 
@@ -121,7 +110,6 @@ def login_view(request):
             elif user is None:
                 # Handle invalid credentials
                 form.add_error(None, _("invalid credentials "))
-                messages.error(request, _("invalid credentials "))
         else:
             messages.error(request, _("please correct the errors of the form"))
 
@@ -144,20 +132,31 @@ def logout_view(request):
 
 
 
+
 @not_authenticated_required
 @ratelimit(key="ip", rate="10000/m", method="POST", block=True)
 def verify_2fa(request):
-        
-    if request.method == 'POST':
-        code = request.POST.get('code', '').strip()
-        session_code = request.session.get('2fa_code')
-        created_at_str = request.session.get('2fa_created_at')
-        user_id = request.session.get('2fa_user_id')
+    # ? Retrieve session values
+    session_code = request.session.get('2fa_code')
+    created_at_raw = request.session.get('2fa_created_at')
+    user_id = request.session.get('2fa_user_id')
 
-        if code == session_code and created_at_str and user_id:
-            created_at = timezone.datetime.fromisoformat(created_at_str)
-            if timezone.now() - created_at > timedelta(minutes=15):
-                # Expired
+    # ? Validate session presence
+    if not session_code or not created_at_raw or not user_id:
+        return render(request, "http_templates/403_prohibited.html", status=403)
+
+    try:
+        created_at = int(created_at_raw)
+    except (TypeError, ValueError):
+        return render(request, "http_templates/403_prohibited.html", status=403)
+
+    if request.method == 'POST':
+        MAX_AGE = 15 * 60  # 15 minutes
+        code = request.POST.get('code', '').strip()
+
+        if code == session_code:
+            if int(time.time()) - created_at > MAX_AGE:
+                # ! Expired
                 for key in ['2fa_code', '2fa_created_at', '2fa_user_id']:
                     request.session.pop(key, None)
                 messages.error(request, _("Your code has expired, please re-authenticate."))
@@ -167,13 +166,12 @@ def verify_2fa(request):
                 user = User.objects.get(id=user_id)
                 user.is_2fa_authenticated = True
                 user.save(update_fields=['is_2fa_authenticated'])
-                for key in ['2fa_code', '2fa_created', '2fa_user_id']:
+                for key in ['2fa_code', '2fa_created_at', '2fa_user_id']:
                     request.session.pop(key, None)
                 login(request, user)
                 return redirect('accounts:profile')  # or next_url
             except User.DoesNotExist:
                 messages.error(request, _("User not found."))
-
         else:
             messages.error(request, _("Invalid code."))
 
