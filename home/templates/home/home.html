@@ -17,13 +17,13 @@
               {% csrf_token %}
               <input type="hidden" name="next" value="/" />
               <button type="submit" class="btn btn-outline-danger">
-                <i class="fa-solid fa-right-from-bracket"></i> Log out
+                <i class="fa-solid fa-right-from-bracket"></i> {% translate 'Log out' %}
               </button>
             </form>
           {% else %}
             <h5 class="card-title">{% translate 'Hello, Guest!' %}</h5>
             <div class="mt-3 d-flex gap-2">
-              <a href="{% url 'accounts:login' %}" class="btn btn-primary">
+              <a href="{% url 'accounts:login' %}?next={{request.path}}" class="btn btn-primary">
                 <i class="fa-solid fa-right-to-bracket"></i> {% translate 'Log in' %}
               </a>
               <a href="#" class="btn btn-secondary">
