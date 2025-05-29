@@ -24,6 +24,7 @@ export {
     removeQueryParam,
     getCurrentUrl,
     setCurrentUrl,
+    shareLinkSocialMedia,
 
     // --- UI Helpers ---
     addFontAwesomeLoader,
@@ -32,6 +33,17 @@ export {
     scrollToElementById,
     scrollToBottom,
     disableForm,
+    setCurrentDateTime,
+    setElementLocked,
+    toggleClass,
+    showElement,
+    hideElement,
+    copyElementText,
+
+    // --- DOM Helpers ---
+    domIsReady,
+    waitForDomReady,
+    debounce,
 };
 
 
@@ -47,6 +59,178 @@ async function loadPartial(url, targetSelector) {
 function disableForm(form, state = true) {
     [...form.elements].forEach(el => el.disabled = state);
 }
+
+
+
+function toggleClass(elementId, className) {
+    const el = document.getElementById(elementId);
+    if (el) el.classList.toggle(className);
+}
+function showElement(elementId) {
+    const el = document.getElementById(elementId);
+    if (el) el.style.display = '';
+}
+function hideElement(elementId) {
+    const el = document.getElementById(elementId);
+    if (el) el.style.display = 'none';
+}
+
+
+function copyElementText(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) {
+        console.error(`Element with ID "${elementId}" not found.`);
+        return;
+    }
+    const text = el.textContent || el.innerText;
+    if (!text) {
+        console.error(`Element with ID "${elementId}" has no text content to copy.`);
+        return;
+    } else {
+        return text;
+    }
+}
+
+function debounce(fn, delay) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(this, args), delay);
+    };
+}
+
+
+function domIsReady() {
+    return document.readyState === 'complete' || document.readyState === 'interactive';
+}
+
+
+function shareLinkSocialMedia(platform, url, text = '', hashtags = '') {
+    let shareUrl = '';
+    switch (platform) {
+        case 'facebook':
+            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
+            break;
+        case 'twitter':
+            shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}&hashtags=${encodeURIComponent(hashtags)}`;
+            break;
+        case 'linkedin':
+            shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+            break;
+        case 'whatsapp':
+            shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}%20${encodeURIComponent(url)}`;
+            break;
+        case 'telegram':
+            shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+            break;
+        case 'reddit':
+            shareUrl = `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}`;
+            break;
+        case 'pinterest':
+            shareUrl = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&description=${encodeURIComponent(text)}`;
+            break;
+        case 'email':
+            shareUrl = `mailto:?subject=${encodeURIComponent(text)}&body=${encodeURIComponent(url)}`;
+            break;
+        default:
+            console.error('Unsupported social media platform:', platform);
+            return;
+    }
+    // Open the share URL in a new window
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+}
+
+
+
+
+function waitForDomReady() {
+    return new Promise(resolve => {
+        if (domIsReady()) {
+            resolve();
+        }
+        else {
+            document.addEventListener('DOMContentLoaded', resolve);
+        }
+    });
+}
+
+function setElementLocked(elementId, is_disabled) {
+    const el = document.getElementById(elementId);
+    if (!el) {
+        console.warn(`Element with ID "${elementId}" not found.`);
+        return;
+    }
+
+    const alreadyLocked = el.getAttribute('data-locked') === 'true';
+
+    if (is_disabled) {
+        if (alreadyLocked) return true; // ! It's already locked
+        el.setAttribute('disabled', 'true');
+        el.setAttribute('data-locked', 'true');
+        el.classList.add('is-locked');
+        el.style.pointerEvents = 'none';
+        el.style.opacity = 0.6;
+        return false; // ! Just locked now
+    } else { 
+        // * element is unlocked
+        el.removeAttribute('disabled');
+        el.removeAttribute('data-locked');
+        el.classList.remove('is-locked');
+        el.style.pointerEvents = 'auto';
+        el.style.opacity = 1;
+        return false;
+    }
+}
+
+
+
+
+
+function setCurrentDateTime(elementId, format = 'YYYY-MM-DD HH:mm:ss', mode = 'text') {
+    const element = document.getElementById(elementId);
+    if (!element) {
+        console.error(`Element with ID "${elementId}" not found.`);
+        return;
+    }
+
+    const now = new Date();
+
+    // Custom date formatter (simple fallback)
+    function formatDate(date, format) {
+        const pad = (n) => String(n).padStart(2, '0');
+        return format
+            .replace('YYYY', date.getFullYear())
+            .replace('MM', pad(date.getMonth() + 1))
+            .replace('DD', pad(date.getDate()))
+            .replace('HH', pad(date.getHours()))
+            .replace('mm', pad(date.getMinutes()))
+            .replace('ss', pad(date.getSeconds()));
+    }
+
+    const formattedDate = formatDate(now, format);
+    const isoString = now.toISOString();
+    const readable = now.toLocaleString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+    });
+
+    // Set content based on mode
+    if (mode === 'text') {
+        element.textContent = formattedDate;
+    } else if (mode === 'value') {
+        element.value = formattedDate;
+    } else {
+        element.textContent = formattedDate;
+        element.value = formattedDate;
+    }
+
+    element.setAttribute('datetime', isoString);
+    element.setAttribute('data-format', format);
+    element.setAttribute('title', readable);
+    element.classList.add('current-datetime');
+}
+
 
 
 
@@ -166,23 +350,37 @@ function getCSRFToken() {
 
 
 async function fetchWithCSRF(url, options = {}) {
-    // options should be an object with method, headers, body, etc.
     const csrfToken = getCSRFToken();
-    if (!options.headers) {
-        options.headers = {};
+
+    options.method = options.method || 'POST';
+    options.headers = options.headers || {};
+
+    // Add CSRF token
+    if (!options.headers['X-CSRFToken']) {
+        options.headers['X-CSRFToken'] = csrfToken;
     }
-    options.headers['X-CSRFToken'] = csrfToken;
+
+    // Handle JSON body conversion
+    if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+        options.headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(options.body);
+    }
+
     try {
         const res = await fetch(url, options);
         if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
         }
-        const data = await res.json();
-        return data;
-    }
-    catch (error) {
+
+        const contentType = res.headers.get('Content-Type');
+        if (contentType && contentType.includes('application/json')) {
+            return await res.json();
+        } else {
+            return await res.text();
+        }
+    } catch (error) {
         console.error('Fetch error:', error);
-        throw error; // Re-throw the error for further handling
+        throw error;
     }
 }
 
@@ -281,12 +479,20 @@ function isCSRFTokenAvailable() {
 
 
 
-function preserveScrollPos() {
+function preserveScrollPos(behavior = 'instant', offset = 0) {
+    if (behavior !== 'instant' && behavior !== 'smooth' && behavior !== 'auto') {
+        // If an invalid behavior is specified, default to 'instant'
+        console.warn('Invalid behavior specified. Defaulting to "instant".');
+        behavior = 'instant';
+    }
+
+    offset = parseInt(offset, 10) || 0; // Ensure offset is a number
     const savedScrollPosition = localStorage.getItem('currentScrollPos');
+
     if (savedScrollPosition !== null) {
         window.scrollTo({
-            top: Math.max(0, parseInt(savedScrollPosition, 10)),
-            behavior: 'instant'
+            top: Math.max(0, parseInt(savedScrollPosition, 10)) + offset, // Ensure non-negative value and apply offset
+            behavior: behavior
         });
         localStorage.removeItem('currentScrollPos'); // Clear after use
     }
@@ -298,20 +504,33 @@ function preserveScrollPos() {
 }
 
 
-function scrollToTop() {
+function scrollToTop(behavior = 'instant', offset = 0) {
+    if (behavior !== 'instant' && behavior !== 'smooth' && behavior !== 'auto') {
+        // If an invalid behavior is specified, default to 'instant'
+        console.warn('Invalid behavior specified. Defaulting to "instant".');
+        behavior = 'instant';
+    }
+
+    offset = parseInt(offset, 10) || 0; // Ensure offset is a number
+
     window.scrollTo({
-        top: 0,
+        top: 0 + offset, // Add offset to the top position
         behavior: 'smooth'
     });
 }
 
 
 
-function scrollToElementById(elementId) {
+function scrollToElementById(elementId, behavior = 'instant') {
+    if (behavior !== 'instant' && behavior !== 'smooth' && behavior !== 'auto') {
+        // If an invalid behavior is specified, default to 'instant'
+        console.warn('Invalid behavior specified. Defaulting to "instant".');
+        behavior = 'instant';
+    }
     const element = document.getElementById(elementId);
     if (element) {
         element.scrollIntoView({
-            behavior: 'smooth',
+            behavior: behavior,
             block: 'start'
         });
     } else {
@@ -321,12 +540,19 @@ function scrollToElementById(elementId) {
 
 
 
-function scrollToBottom() {
+function scrollToBottom(behavior = 'instant') {
+    if (behavior !== 'instant' && behavior !== 'smooth' && behavior !== 'auto') {
+        // If an invalid behavior is specified, default to 'instant'
+        console.warn('Invalid behavior specified. Defaulting to "instant".');
+        behavior = 'instant';
+    }
     window.scrollTo({
         top: document.body.scrollHeight,
-        behavior: 'smooth'
+        behavior: behavior
     });
 }
+
+
 
 
 
