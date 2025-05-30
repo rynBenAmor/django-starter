@@ -1,0 +1,266 @@
+<!--widgets/key_value_widget.html -->
+<style>
+    .key-value-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-bottom: 4px;
+        background-color: white;
+        color: #333;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+
+    .key-value-table th, 
+    .key-value-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border: 1px solid #eaeaea;
+    }
+
+
+    .key-value-table th {
+        background-color: #ff6b4a;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-color: #ff6b4a;
+    }
+
+    .key-value-table td {
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        font-weight: 500;
+        vertical-align: middle;
+    }
+
+    .key-value-table tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    .key-value-table tbody tr:hover {
+        background-color: #f1f3f5;
+    }
+
+    .key-value-table input[type="text"] {
+        width: 100%;
+        padding: 8px 12px;
+        margin: 0;
+        box-sizing: border-box;
+        background-color: white;
+        color: #333;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 0.9rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .key-value-table input[type="text"]:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+
+    .key-value-table input[type="text"]::placeholder {
+        color: #999;
+        opacity: 1;
+    }
+
+    /* Button Styling */
+    .key-value-table button {
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .key-value-table .remove-row {
+        background-color: #ff4444;
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .key-value-table .remove-row:hover {
+        background-color: #cc0000;
+        transform: translateY(-1px);
+    }
+
+    .key-value-table .remove-row:active {
+        transform: translateY(0);
+    }
+
+    #kv-add-row {
+        background-color: #3498db;
+        color: white;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 6px;
+        margin-top: 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
+    }
+
+    #kv-add-row:hover {
+        background-color: #2980b9;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+    }
+
+    #kv-add-row:active {
+        transform: translateY(0);
+    }
+
+    /* Responsive Table - Improved Version */
+    @media (max-width: 768px) {
+        .key-value-table {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: none;
+        }
+        
+        .key-value-table thead {
+            display: table-header-group; /* Keep header visible */
+        }
+        
+        .key-value-table th {
+            font-size: 0.8rem;
+            padding: 8px 10px;
+        }
+        
+        .key-value-table tbody {
+            display: block;
+        }
+        
+        .key-value-table tr {
+            display: table;
+            width: 100%;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .key-value-table td {
+            display: table-cell;
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        /* Remove data-label pseudo-elements since we're keeping headers */
+        .key-value-table td::before {
+            content: none;
+        }
+        
+        /* Make inputs full width but not flex */
+        .key-value-table input[type="text"] {
+            width: 100%;
+        }
+        
+        /* Adjust button sizing */
+        .key-value-table .remove-row {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+    }
+
+    /* For very small screens (optional) */
+    @media (max-width: 480px) {
+        .key-value-table th, 
+        .key-value-table td {
+            padding: 8px 10px;
+            font-size: 0.85rem;
+        }
+        
+        .key-value-table input[type="text"] {
+            padding: 6px 10px;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+
+<table id="{{ widget.attrs.id }}" class="key-value-table">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Valeur</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for key, value in widget.value %}
+        <tr>
+            <td><input type="text" name="{{ widget.name }}_key" value="{{ key }}" placeholder="Example: couleur" /></td>
+            <td><input type="text" name="{{ widget.name }}_value" value="{{ value }}" placeholder="Example: bleu" /></td>
+            <td><button type="button" class="remove-row">Retirer</button></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<button type="button" id="kv-add-row" class="add-row">Ajouter une autre ligne <i class="fa-regular fa-square-plus fa-xl"></i> </span></button>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const table = document.getElementById("{{ widget.attrs.id }}");
+        const addRowButton = document.getElementById('kv-add-row');
+
+        addRowButton.addEventListener('click', function () {
+            const newRow = createNewRow();
+            table.querySelector('tbody').appendChild(newRow);
+        });
+
+        table.addEventListener('click', function (event) {
+            if (event.target.classList.contains('remove-row')) {
+                const row = event.target.closest('tr');
+
+                row.remove();
+
+            }
+        });
+
+        function createNewRow() {
+            const row = document.createElement('tr');
+
+            const keyCell = document.createElement('td');
+            const keyInput = document.createElement('input');
+            keyInput.type = 'text';
+            keyInput.name = "{{ widget.name }}_key";
+            keyCell.appendChild(keyInput);
+
+            const valueCell = document.createElement('td');
+            const valueInput = document.createElement('input');
+            valueInput.type = 'text';
+            valueInput.name = "{{ widget.name }}_value";
+            valueCell.appendChild(valueInput);
+
+            const actionsCell = document.createElement('td');
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.classList.add('remove-row');
+            removeButton.textContent = 'Retirer';
+            actionsCell.appendChild(removeButton);
+
+            row.appendChild(keyCell);
+            row.appendChild(valueCell);
+            row.appendChild(actionsCell);
+
+            return row;
+        }
+    });
+</script>

@@ -1,6 +1,6 @@
 #this is a starter Nginx configuration file for a Django project with security and performance optimizations (edit as needed).
-# it should exist in /etc/nginx/sites-available/myproject.conf
-# and be symlinked to /etc/nginx/sites-enabled/myproject.conf
+# it should exist in /etc/nginx/sites-available/myproject
+# and be symlinked to /etc/nginx/sites-enabled/myproject
 # also, can edit /etc/nginx/nginx.conf for global settings
 
 # to create the symlink:
