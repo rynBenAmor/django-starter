@@ -2,12 +2,74 @@
 <!DOCTYPE html>
 <html lang="{{current_language_key|default:"fr"}}">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">    
+
+    <meta name="csrf-token" content="{{ csrf_token }}">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!--bootstrap css-->
     <link rel="stylesheet" href="{% static 'style.css' %}">
 
+    <link rel="icon" type="image/png" href="{% static 'favicon.png' %}">
+
     <title>{% block title %}{% endblock title %}</title>    
+
+
+    <!-- Default SEO Meta Tags (Can be overridden in specific templates) -->
+    {% block seo_description %}
+        <meta name="description" content="">
+    {% endblock seo_description %}
+
+    <meta name="keywords" content="{% block seo_extra_keywords %}{% endblock seo_extra_keywords %}">
+    <meta name="author" content="Rayen Ben Amor">
+    <meta name="robots" content="index, follow">              
+    <link rel="canonical" href="{{request.build_absolute_uri}}">                
+    
+    <!-- Open Graph Meta Tags image minimum recommended size: 1200x630 pixels -->
+    {% block og_title %}
+        <meta property="og:title" content="">
+    {% endblock og_title %}
+
+    {% block og_description %}
+        <meta property="og:description" content="">
+    {% endblock og_description %}
+    
+    {% block og_image %}
+        <meta property="og:image" content="https://{{ request.get_host }}{% static 'big-image.webp' %}">
+    {% endblock og_image %}
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/webp">
+    <meta property="og:image:alt" content="Django Starter Template">
+    <meta property="og:image:secure_url" content="https://{{ request.get_host }}{% static 'big-image.webp' %}">
+
+    <meta property="og:site_name" content="django_starter.com">
+    <meta property="og:locale" content="{{ current_language_key|default:"fr" }}">
+    <meta property="og:locale:alternate" content="en">
+    <meta property="og:locale:alternate" content="fr">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:type" content="website">
+
+
+        <!-- Structured Data -->
+    {% block structured_data %}
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "",
+            "url": "{{ request.build_absolute_uri }}",
+            "description": "",
+            "logo": "https://{{ request.get_host }}{% static 'logo.png' %}",
+            "sameAs": [
+                "https://www.facebook.com/your-profile",        
+                "https://www.linkedin.com/company/your-profile"
+            ]
+        }
+        </script>
+    {% endblock structured_data %}
 
     {% block extra_head %}{% endblock extra_head %}     
 
@@ -31,7 +93,6 @@
         {% block content %}
         
         {% endblock content %}
-
 
     </main>
 

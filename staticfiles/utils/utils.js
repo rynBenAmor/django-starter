@@ -343,9 +343,16 @@ function getCookie(name) {
 
 
 function getCSRFToken() {
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    return csrfToken;
+    //fetch CSRF token from the hidden input or meta tag
+    const input = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (input && input.value) {
+        return input.value;
+    }
+
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : null;
 }
+
 
 
 
