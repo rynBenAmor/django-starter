@@ -74,6 +74,7 @@ def send_2fa_code(request, user, subject="Your 2FA Code", message_template=None)
 
 
 
+
 class EmailMATemplate:
     """
     - this is an efficient utility shortcut for creating EmailMultiAlternatives in case of 
@@ -98,7 +99,12 @@ class EmailMATemplate:
         connection.close()
 
     """
+    
     def __init__(self, subject:str, template_path:str, context:object = None, from_email:str = None, to:list = None, connection=None):
+        
+        if not to:
+            raise ValueError("Recipient 'to' must be provided.")
+        
         self.subject = subject
         self.template_path = template_path 
         self.context = context or {}
@@ -115,9 +121,12 @@ class EmailMATemplate:
             body=text_body,
             from_email=self.from_email,
             to=self.to,
+            connection=self.connection,
         )
         email.attach_alternative(html_body, "text/html")
         email.send()
+        return email
+
 
 
 

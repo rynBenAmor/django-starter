@@ -39,6 +39,7 @@ export {
     showElement,
     hideElement,
     copyElementText,
+    printSection,
 
     // --- DOM Helpers ---
     domIsReady,
@@ -562,6 +563,59 @@ function scrollToBottom(behavior = 'instant') {
 
 
 
+/**
+ * Print a specific section of the page with custom options.
+ * @param {Object} options
+ * @param {string} options.sectionSelector - CSS selector for the section to print (required)
+ * @param {string[]} [options.hideSelectors] - Array of selectors to hide during print
+ * @param {string} [options.watermarkSelector] - Selector for watermark to show during print
+ * @param {string} [options.extraPrintCSS] - Additional CSS to inject for print
+ */
+function printSection({ sectionSelector, hideSelectors = [], watermarkSelector = null, extraPrintCSS = '' }) {
 
+    /** Usage example: 
+        document.getElementById('download-pdf-button')?.addEventListener('click', function () {
+            printSection({
+                sectionSelector: '#product-detail-section',
+                hideSelectors: ['#base-nav', '#product-detail-buttons', '#similar-products-section', 'footer'],
+                watermarkSelector: '#water-mark-logo',
+                extraPrintCSS: '' // Optional extra CSS
+            });
+        }); 
+    */
 
+    if (!sectionSelector) {
+        console.error('printSection: sectionSelector is required.');
+        return;
+    }
+
+    let hideCSS = '';
+    if (hideSelectors.length) {
+        hideCSS = `${hideSelectors.join(', ')} { display: none !important; }`;
+    }
+    let watermarkCSS = '';
+    if (watermarkSelector) {
+        watermarkCSS = `${watermarkSelector} { display: block !important; }`;
+    }
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @media print {
+            body * { visibility: hidden !important; }
+            ${sectionSelector}, ${sectionSelector} * { visibility: visible !important; }
+            ${hideCSS}
+            ${watermarkCSS}
+            ${extraPrintCSS}
+        }
+    `;
+    document.head.appendChild(style);
+
+    const cleanup = () => {
+        document.head.removeChild(style);
+        window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+
+    window.print();
+}
 
