@@ -1,0 +1,134 @@
+
+{% load i18n %}
+<!--an alternative to toast-->
+
+{% for message in messages %}
+<!-- Create a toast for each message -->
+<div class="toast toast-{{ message.tags|default:'info' }}" data-tags="{{ message.tags|default:'info' }}">
+    <div class="toast-content">
+        <i class="toast-icon"></i>
+        <p class="toast-message">{{ message }}</p>
+    </div>
+    <button class="toast-close">
+        <i class="fas fa-times"></i>
+    </button>
+</div>
+{% endfor %}
+
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toasts = document.querySelectorAll(".toast");
+        const icons = {
+            success: "fa-circle-check",
+            error: "fa-circle-exclamation",
+            warning: "fa-triangle-exclamation",
+            info: "fa-circle-info",
+            debug: "fa-bug"
+        };
+
+        toasts.forEach((toast) => {
+            // Get the message type (tags) from data attribute or default to 'info'
+            const tags = toast.dataset.tags || 'info';
+            const iconClass = icons[tags] || icons['info'];
+
+            // Set the icon
+            const iconEl = toast.querySelector(".toast-icon");
+            iconEl.className = `toast-icon fas ${iconClass}`;
+
+            // Show the toast
+            toast.classList.add("show");
+
+            // Add click handler to close button
+            const closeBtn = toast.querySelector(".toast-close");
+            closeBtn.addEventListener('click', () => {
+                toast.classList.remove("show");
+            });
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 5000);
+        });
+    });
+</script>
+
+<style>
+    /* ===== TOAST STYLES ===== */
+    .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        max-width: 350px;
+        padding: 16px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        z-index: 1000;
+        color: white;
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    /* Toast states */
+    .toast.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    /* Toast content layout */
+    .toast-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .toast-icon {
+        font-size: 20px;
+    }
+
+    .toast-message {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
+    /* Close button */
+    .toast-close {
+        background: transparent;
+        border: none;
+        color: inherit;
+        opacity: 0.7;
+        cursor: pointer;
+        padding: 4px;
+        align-self: flex-start;
+        transition: opacity 0.2s;
+    }
+
+    .toast-close:hover {
+        opacity: 1;
+    }
+
+    /* Color variants */
+    .toast-success {
+        background-color: #28a745;
+    }
+
+    .toast-error {
+        background-color: #dc3545;
+    }
+
+    .toast-warning {
+        background-color: #fd7e14;
+    }
+
+    .toast-info {
+        background-color: #17a2b8;
+    }
+</style>
