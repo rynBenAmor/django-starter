@@ -47,8 +47,6 @@ def widget_type(field):
 
 
 
-
-
 @register.filter(name='add_attr')
 def add_attr(field, attributes):
     """
@@ -88,14 +86,11 @@ def add_attr(field, attributes):
 
 
 
-
 @register.filter(name="get_attr")
 def get_attr(obj, attr):
 
     """important filter MUST not have the same name as a built in python function else it will loop and crash"""
     return getattr(obj, attr, None)
-
-
 
 
 @register.filter(name="has_attr")
@@ -108,19 +103,110 @@ def has_attr(obj, attr) -> bool:
     return hasattr(obj, attr)
 
 
+
 @register.filter
-def batch(iterable, n=1):
+def is_checkbox(field):
     """
-    Split an iterable into chunks of size n.
-    Usage in template:
-        ``  
-        {% for chunk in my_list|batch:3 %}
-            {% for object in chunk %}
-            {% endfor %}
-        {% endfor %}
-        ``
+    Check if field is a checkbox input
+    Usage: {% if form.remember_me|is_checkbox %}
     """
-    length = len(iterable)
-    n = int(n)
-    for ndx in range(0, length, n):
-        yield iterable[ndx:min(ndx + n, length)]
+    return field.field.widget.__class__.__name__ == 'CheckboxInput'
+
+
+@register.filter
+def is_radio(field):
+    """
+    Check if field is a radio input
+    Usage: {% if form.gender|is_radio %}
+    """
+    return field.field.widget.__class__.__name__ == 'RadioSelect'
+
+
+@register.filter
+def field_type(field):
+    """
+    Returns the field type (CharField, IntegerField, etc)
+    Usage: {{ form.username|field_type }}
+    """
+    return field.field.__class__.__name__
+
+
+@register.filter
+def placeholder(field, text):
+    """
+    Adds placeholder text to a form field
+    Usage: {{ form.email|placeholder:"Enter your email" }}
+    """
+    field.field.widget.attrs['placeholder'] = text
+    return field
+
+
+@register.simple_tag
+def render_field(field, label_class='', field_class='', wrapper_class=''):
+    """
+    Renders complete form field with label, field and errors
+    Usage: {% render_field form.email label_class="form-label" field_class="form-control" %}
+    """
+    html = f'<div class="{wrapper_class}">'
+    if field.label:
+        html += field.label_tag(attrs={'class': label_class})
+    html += str(field.as_widget(attrs={'class': field_class}))
+    if field.errors:
+        html += '<div class="invalid-feedback">'
+        html += '<br>'.join(field.errors)
+        html += '</div>'
+    if field.help_text:
+        html += f'<small class="form-text text-muted">{field.help_text}</small>'
+    html += '</div>'
+    return SafeString(html)
+
+
+@register.filter
+def errors_as_json(form):
+    """
+    Returns form errors as JSON string for AJAX handling
+    Usage: {{ form|errors_as_json }}
+    """
+    from django.core.serializers.json import DjangoJSONEncoder
+    import json
+    return json.dumps(form.errors, cls=DjangoJSONEncoder)
+
+
+@register.filter
+def set_required(field, required=True):
+    """
+    Dynamically set field as required/optional
+    Usage: {{ form.phone|set_required:False }}
+    """
+    field.field.required = required
+    return field
+
+
+@register.filter
+def form_field_names(form):
+    """
+    Returns list of form field names
+    Usage: {% for name in form|form_field_names %}
+    """
+    return [field.name for field in form]
+
+
+@register.simple_tag
+def render_form_errors(form):
+    """
+    Renders all form errors in a Bootstrap alert
+    Usage: {% render_form_errors form %}
+    """
+    if not form.errors:
+        return ''
+    
+    html = '<div class="alert alert-danger">'
+    html += '<ul class="mb-0">'
+    for field, errors in form.errors.items():
+        for error in errors:
+            if field == '__all__':
+                html += f'<li>{error}</li>'
+            else:
+                html += f'<li>{field}: {error}</li>'
+    html += '</ul></div>'
+    return SafeString(html)
