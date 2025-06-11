@@ -157,12 +157,13 @@ def join(value, sep=', '):
     
 
 @register.filter
-def center(value, width):
+def center(value, args):
     """
-    Center the string in a field of given width.
-    Usage: {{ value|center:20 }}
+    Center the string with args width and symbol.
+    Usage: {{ value|center:"20,+" }}
     """
     try:
-        return str(value).center(int(width))
+        width, symbol = args.split(',')
+        return str(value).center(int(width), str(symbol))
     except Exception:
         return value
