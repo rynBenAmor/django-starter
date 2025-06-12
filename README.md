@@ -3,11 +3,14 @@
 A personal Django starter template with:
 
 - Django 5.2
+- The essentials of an Auth workflow
 - Bootstrap 5 via SCSS
 - Font Awesome 6 Free via CDN (for now, because I can't be bothered with webfonts 404)
 - Vite for fast bundling (JS & SCSS)
 - Static and media files set up (ready for production)
 - Simple translation toggler (can delete or add django-modeltranslation on top of it for a complete solution)
+- Extra utility filters/components/widgets/functions/payment methods... (most things are centralized in accounts app)
+- Used some django 3rd party packages (django-htmlmin, django-ratelimit...)
 
 ---
 
@@ -34,6 +37,12 @@ DB_PASSWORD=''
 # Use "db" if Django is run inside Docker, else "host.docker.internal" or "localhost"
 DB_HOST=localhost
 DB_PORT=5432
+
+FLOUCI_APP_SECRET=''
+FLOUCI_APP_TOKEN=''
+
+PAYMEE_API_KEY=''
+
 ```
 </details>
 
