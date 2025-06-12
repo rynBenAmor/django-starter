@@ -97,7 +97,7 @@ def login_view(request):
 
                     else:
                         # Generate 4-digit code and send it
-                        send_2fa_code(request, user)
+                        send_2fa_code(request, user, email_template="emails/2fa_verification_email.html")
                         messages.info(request, _("2FA required! a 4 digit code was sent to your email inbox"))
                         return redirect('accounts:verify_2fa')  # your 2FA code input view
                 
