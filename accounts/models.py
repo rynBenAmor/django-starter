@@ -1,15 +1,23 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+from django.utils.translation import gettext_lazy as _
+from .managers import CustomUserManager
 # Create your models here.
 
 
 class User(AbstractUser):
+    email = models.EmailField(_("email address"), unique=True, blank=False)
+
     is_email_verified = models.BooleanField(default=False)#on first signup
 
     #optional 2fa
     enabled_2fa = models.BooleanField(default=False)#can enable this through profile lets say
     is_2fa_authenticated = models.BooleanField(default=False)
+
+    REQUIRED_FIELDS = []
+    USERNAME_FIELD = 'email' #for authentication
+
+    objects = CustomUserManager()  # Use the custom manager to skip username field in createsuperuser
 
     def __str__(self):
         return self.email
