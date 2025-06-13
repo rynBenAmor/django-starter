@@ -22,7 +22,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 
 from .forms import LoginForm, LanguageTogglerForm
-from .utils import send_verification_email, not_authenticated_required, send_2fa_code
+from .utils import send_verification_email, not_authenticated_required, send_2fa_code, ajax_required
 from .models import User
 
 
@@ -178,9 +178,9 @@ def verify_2fa(request):
     return render(request, 'registration/verify_2fa.html')
 
 
-
-@require_POST
 @login_required
+@require_POST
+@ajax_required(header_value='MadeWithFetch')
 def toggle_2fa_status_ajax(request):
     user = request.user
     user.enabled_2fa = not user.enabled_2fa

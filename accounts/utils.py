@@ -187,7 +187,7 @@ def not_authenticated_required(view_func):
     return _wrapped_view
 
 
-def ajax_required(header_value='XMLHttpRequest', header_name='x-requested-with'):
+def ajax_required(header_name='X-Requested-With', header_value='XMLHttpRequest'):
     """
     A decorator to ensure the request is an AJAX request.
     

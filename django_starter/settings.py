@@ -94,7 +94,7 @@ MIDDLEWARE = [
     #local
     'accounts.middlewares.Enforce2FAMiddleware',
     'accounts.middlewares.AdminAccessMiddleware',
-    'accounts.middlewares.AjaxOnlyMiddleware',
+
     
 
 ]
@@ -190,7 +190,7 @@ LOCALE_PATHS = [
 
 # https://docs.djangoproject.com/en/dev/topics/auth/customizing/#substituting-a-custom-user-model
 AUTHENTICATION_BACKENDS = [
-    'accounts.backends.EmailBackend',  # your email auth backend
+    'accounts.backends.AuthByEmailBackend',  # your email auth backend
 ]
 
 AUTH_USER_MODEL = "accounts.User"

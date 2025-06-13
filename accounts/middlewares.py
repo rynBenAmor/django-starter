@@ -45,15 +45,3 @@ class AdminAccessMiddleware:
         return self.get_response(request) #else let response be handled normally by the appropriate views
 
 
-
-class AjaxOnlyMiddleware:
-    """Middleware that verifies the presence of a custom header ``'X-Requested-With': 'MadeWithFetch'`` to ensure the request originates from JavaScript, preventing direct URL access."""
-
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        if request.path.startswith('/accounts/ajax/') and not request.headers.get('X-Requested-With') == 'MadeWithFetch':
-            return render(request, 'http_templates/403_prohibited.html', status=403)
-
-        return self.get_response(request)
