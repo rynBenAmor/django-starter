@@ -10,9 +10,7 @@ from django.conf import settings
 from django.utils.html import strip_tags
 from django.core.signing import TimestampSigner
 from django.core.mail import EmailMultiAlternatives
-import random
-import re
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from functools import wraps
 import uuid
 import os
@@ -24,6 +22,12 @@ from django.db import transaction, IntegrityError
 from django.http import HttpResponseBadRequest
 from django.utils.text import slugify
 from django.utils.http import url_has_allowed_host_and_scheme
+import re
+import unicodedata
+from django.core.files.uploadedfile import UploadedFile
+from django.core.cache import cache
+from typing import Pattern, Set
+import json
 # ?-----------------------------end imports-------------------
 
 
@@ -69,35 +73,6 @@ def mask_string(s, visible_start=2, visible_end=2, mask_char='*'):
     except Exception:
         return s  # fallback if something weird happens
 
-
-
-def check_if_hashed(password: str, algorithm=None) -> bool:
-    """
-    - Returns True if the password appears to be already hashed ``algorithm$iterations$salt$hash``, 
-    - Optional : type of hashing in `pbkdf2_sha256` or `argon2` or `bcrypt_sha256`, 
-    - Otherwise returns False (indicating it's plaintext and needs hashing).
-    """
-    if not password:
-        return False  # No password set
-
-    if algorithm == "pbkdf2_sha256":
-        # Refined regex for Django's pbkdf2_sha256 hash format and handle base64 characters like '+' and '='
-        return bool(re.match(r'^pbkdf2_sha256\$\d+\$[a-zA-Z0-9]+\$[a-zA-Z0-9+/=]+$', password))
-    
-    elif algorithm == "argon2":
-        # Regex tailored for Argon2 format
-        return bool(re.match(r'^argon2[a-z]*\$.+\$.+\$.+$', password))
-    
-    elif algorithm == "bcrypt_sha256":
-        # Regex tailored for bcrypt format
-        return bool(re.match(r'^bcrypt_sha256\$.+$', password))
-
-    elif algorithm == None:
-        #general purpose
-        return bool(re.match(r'^[a-zA-Z0-9_]+\$\d+\$[a-zA-Z0-9]+\$[a-zA-Z0-9+/=]+$', password))
-    
-    else:
-        return False
 
 
 
@@ -163,8 +138,43 @@ def unique_slugify(instance, value, slug_field_name='slug'):
 
 
 # * ==========================================================
-# * URLS
+# * URLS and api
 # * ==========================================================
+
+def request_rate_limit(request, key: str, limit: int = 5, time_window: int = 60) -> bool:
+    """
+    Limits the number of requests per user or session for a given key within a time window.
+    
+    Args:
+        request: Django request object.
+        key (str): Identifier for the type of action (e.g., "login").
+        limit (int): Number of allowed requests.
+        window (int): Time window in seconds.
+
+    Returns:
+        bool: True if allowed, False if rate-limited.
+    """
+    if request.user.is_authenticated:
+        identifier = str(request.user.pk)
+    else:
+        # Use session key or fallback to a random UUID if no session
+        identifier = request.session.session_key or uuid.uuid4().hex
+
+    cache_key = f'rate_limit:{key}:{identifier}'
+    count = cache.get(cache_key, 0)
+
+    if count >= limit:
+        return False
+
+    if count == 0:
+        # First request: set with expiration
+        cache.set(cache_key, 1, timeout=time_window)
+    else:
+        # Increment without resetting TTL
+        cache.incr(cache_key)
+
+    return True
+
 
 def safe_redirect(request, url, fallback_url="/"):
     """
@@ -173,6 +183,258 @@ def safe_redirect(request, url, fallback_url="/"):
     if url and url_has_allowed_host_and_scheme(url, allowed_hosts={request.get_host()}):
         return redirect(url)
     return redirect(fallback_url)
+
+# * ==========================================================
+# * Checkers
+# * ==========================================================
+
+
+def is_valid_json(json_str: str) -> bool:
+    try:
+        json.loads(json_str)
+        return True
+    except json.JSONDecodeError:
+        return False
+    
+
+def is_safe_upload(file: UploadedFile, max_size_mb: int = 10) -> bool:
+    """
+    Validates file uploads (extension, MIME type, size).
+    """
+    allowed_extensions = {'.jpg', '.png', '.pdf'}
+    allowed_mime_types = {'image/jpeg', 'image/png', 'application/pdf'}
+    
+    # Check extension
+    ext = os.path.splitext(file.name)[1].lower()
+    if ext not in allowed_extensions:
+        return False
+    
+    # Check MIME type
+    if file.content_type not in allowed_mime_types:
+        return False
+    
+    # Check size (convert MB to bytes)
+    if file.size > max_size_mb * 1024 * 1024:
+        return False
+    
+    return True
+
+
+def contains_malicious_code(text: str) -> bool:
+    """
+    Checks for suspicious HTML/JS patterns.
+    """
+    patterns = [
+        r'<script.*?>.*?</script>',
+        r'onerror=',
+        r'onload=',
+        r'javascript:',
+        r'&lt;script&gt;'
+    ]
+    return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)
+
+def is_strong_password(password: str) -> bool:
+    """
+    Checks if a password is strong (min 8 chars, mixed case, numbers, symbols).
+    """
+    if len(password) < 8:
+        return False
+    if not re.search(r'[A-Z]', password):  # At least 1 uppercase
+        return False
+    if not re.search(r'[a-z]', password):  # At least 1 lowercase
+        return False
+    if not re.search(r'[0-9]', password):  # At least 1 digit
+        return False
+    if not re.search(r'[^A-Za-z0-9]', password):  # At least 1 symbol
+        return False
+    return True
+
+
+def check_if_hashed(password: str, algorithm=None) -> bool:
+    """
+    - Returns True if the password appears to be already hashed ``algorithm$iterations$salt$hash``, 
+    - Optional : type of hashing in `pbkdf2_sha256` or `argon2` or `bcrypt_sha256`, 
+    - Otherwise returns False (indicating it's plaintext and needs hashing).
+    """
+    if not password:
+        return False  # No password set
+
+    if algorithm == "pbkdf2_sha256":
+        # Refined regex for Django's pbkdf2_sha256 hash format and handle base64 characters like '+' and '='
+        return bool(re.match(r'^pbkdf2_sha256\$\d+\$[a-zA-Z0-9]+\$[a-zA-Z0-9+/=]+$', password))
+    
+    elif algorithm == "argon2":
+        # Regex tailored for Argon2 format
+        return bool(re.match(r'^argon2[a-z]*\$.+\$.+\$.+$', password))
+    
+    elif algorithm == "bcrypt_sha256":
+        # Regex tailored for bcrypt format
+        return bool(re.match(r'^bcrypt_sha256\$.+$', password))
+
+    elif algorithm == None:
+        #general purpose
+        return bool(re.match(r'^[a-zA-Z0-9_]+\$\d+\$[a-zA-Z0-9]+\$[a-zA-Z0-9+/=]+$', password))
+    
+    else:
+        return False
+
+
+
+class SpamDetector:
+
+    def __init__(self):
+        # Pre-compile regex patterns for better performance
+        self.allowed_chars_pattern = re.compile(rf'^[0-9A-Za-zÀ-ÿêéèœàç\'"(),\.:\-!? \n\r]+$')
+        self.url_pattern = re.compile(r'''
+            (?:https?://|www\.|ftp://)  # Protocols or www
+            [^\s/$.?#]+\.[^\s]*        # Domain and rest of URL
+        ''', re.VERBOSE | re.IGNORECASE)
+        
+        self.gibberish_pattern = re.compile(r'''
+            (?:\b(?=\w*[A-Z])(?=\w*[a-z])[A-Za-z]{4,}\b[\s]*){3,}  # TitleCase words
+            |\b\w*\d+\w*\b                                         # Words with numbers
+            |[A-Za-z]{15,}                                          # Very long words
+            |(?:[^a-zA-Z0-9\s]|_){3,}                               # Excessive special chars
+        ''', re.VERBOSE)
+        
+        self.emoji_pattern = re.compile(
+            r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F700-\U0001F77F]'
+        )
+        
+        # generic spam keywords
+        self.spam_keywords: Set[str] = {
+            'spam', 'buy now', 'discount', 'offer', 'cheap', 'casino', 
+            'bitcoin', 'crypto', 'crypto currency', 'cryptocurrency',
+            'poker', 'free', 'bet', '100%', 'investment', 'click here',
+            'below', 'virus', 'loan', 'money', 'profit', 
+            'win', 'prize', 'selected', 'winner', 'congratulations', 'chatgpt', 
+            'artificial intelligence', 'password', 'reseller', 'chat gpt',
+            'price', 'gambling', 'gamble', 'xbet', '1xbet', 'discover',
+            'nigga', 'fuck', 'bitch', 'penis', 'porn', 'stimulate', 'viagra', 'sex', 'vagina', 'pussy',
+            'paypal', 'pay pal', 'seo', 'clicks', 'views', 'exclusive', 'paye per click',
+            'limited time', 'urgent', 'act now', 'bonus', 'tokens', 'NFT', 'promo', 'trading', 'forex',
+            'earn', 'rich', 'million', 'billion', 'dollars', 'USD', 'BTC', 'ETH'
+        }
+        
+        self.whitelist: Set[str] = {
+            'hello world'
+        }
+
+    # the main generic function
+    def contains_spam(self, message: str) -> bool:
+        # Normalize fancy punctuation and remove zero-width spaces
+        message = unicodedata.normalize("NFKC", message)
+        message = message.replace('\u200b', '').replace('\u200c', '').replace('\u200d', '')
+        
+        message_lower = message.lower()
+        
+        # Check allowed characters
+        if not self.allowed_chars_pattern.fullmatch(message):
+            return True
+            
+        # Check for URLs
+        if self.url_pattern.search(message):
+            return True
+            
+        # Check for gibberish (TitleCase, numbers in words, etc.)
+        if self.gibberish_pattern.search(message):
+            return True
+            
+        # Check for excessive emojis
+        if len(self.emoji_pattern.findall(message)) > 3:
+            return True
+            
+        # finally Check for spam keywords (excluding whitelisted terms)
+        spam_keywords = self.spam_keywords - self.whitelist
+        return any(
+            re.search(rf'\b{re.escape(keyword)}\b', message_lower)
+            for keyword in spam_keywords
+        )
+    
+    def contains_contact_info(self, message: str) -> bool:
+        # Email pattern
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        # International phone number pattern (basic)
+        phone_pattern = r'(\+\d{1,3}[-\.\s]?)?(\d{3}[-\.\s]?){2}\d{4}'
+        
+        return bool(
+            re.search(email_pattern, message, re.IGNORECASE) or
+            re.search(phone_pattern, message)
+        )
+    
+    def has_excessive_punctuation(self, message: str, max_allowed: int = 3) -> bool:
+        return bool(
+            re.search(r'(!|\?|\.){' + str(max_allowed + 1) + ',}', message)
+        )
+    
+    def is_all_caps(self, message: str, threshold: float = 0.8) -> bool:
+        if len(message) < 5:  # Ignore short messages
+            return False
+        
+        uppercase_chars = sum(1 for c in message if c.isupper())
+        ratio = uppercase_chars / len(message)
+        return ratio > threshold
+    
+    def has_repeated_chars(self, message: str, max_repeats: int = 3) -> bool:
+        """example hellooo wwwooorrrllld"""
+        return bool(
+            re.search(r'(.)\1{' + str(max_repeats) + ',}', message)
+        )
+    
+    def has_suspicious_unicode(self, message: str) -> bool:
+        # Check for Cyrillic, Arabic, or other non-Latin scripts mixed with Latin
+        return bool(
+            re.search(r'[\u0400-\u04FF\u0600-\u06FF]', message)  # Cyrillic & Arabic ranges
+        )
+
+    def contains_profanity(self, message: str, extra_keywords: Set[str]) -> bool:
+        """this can be generic"""
+        profanity_words = {
+            "fuck", "shit", "asshole", "bitch", "cunt", "dick", "piss", "bastard",
+            "nigga", "nigger", "whore", "slut", "fag", "retard", "pussy", "cock"
+        }
+        profanity_words.update(extra_keywords)
+        message_lower = message.lower()
+        return any(
+            re.search(rf'\b{re.escape(word)}\b', message_lower)
+            for word in profanity_words
+        )
+    
+    def is_phishing(self, message: str, extra_keywords: Set[str]) -> bool:
+        """this can be generic too"""
+        phishing_keywords = {
+            "verify your account", "login required", "suspicious activity",
+            "account locked", "password expired", "click to confirm",
+            "urgent action required", "bank alert", "IRS notice", "PayPal update"
+        }
+        phishing_keywords.update(extra_keywords)
+        message_lower = message.lower()
+        return any(
+            keyword in message_lower for keyword in phishing_keywords
+        )
+    
+    def has_hidden_chars(self, message: str) -> bool:
+        zero_width_chars = {'\u200b', '\u200c', '\u200d', '\uFEFF'}
+        return any(char in message for char in zero_width_chars)
+    
+    def email_is_allowed(self, email: str, allowed_domains: Set[str]) -> bool:
+        """
+        Checks if an email's domain is in the allowed set.
+        
+        Args:
+            email (str): The email address to check.
+            allowed_domains (Set[str]): Set of allowed domains (e.g., {"gmail.com", "company.com"}).
+        
+        Returns:
+            bool: True if the domain is allowed, False otherwise.
+        """
+        # Extract domain part after '@'
+        parts = email.split('@')
+        if len(parts) != 2:  # Invalid email format
+            return False
+        
+        domain = parts[1].lower()  # Case-insensitive comparison
+        return domain in allowed_domains
 
 # * ==========================================================
 # * Decorators
@@ -248,7 +510,7 @@ def get_object_or_none(model, **kwargs):
         return None
 
 
-from django.shortcuts import get_object_or_404
+
 
 def get_by_natural_key_or_404(model, *args):
     """
