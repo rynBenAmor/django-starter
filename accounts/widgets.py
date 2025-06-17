@@ -1,7 +1,13 @@
 # widgets.py
+# ! ``template_name``: django quirk with the template path prefers an app directory 
+# ! and will return a TemplateDoesNotExist if place elsewhere (yes even if you explicitly add one in 'DIRS')
+# ! IT IS WHAT IT IS
+
 from django import forms
 import json
-from django.core.exceptions import ValidationError
+# ? ----------------------------------------------------------------
+# ? end imports
+# ? ----------------------------------------------------------------
 
 
 # a solution to make json fields more user-friendly
@@ -34,50 +40,7 @@ class KeyValueWidget(forms.Widget):
         return value.items()
 
 
-        
 
-
-
-class JSONKeyValueField(forms.Field):
-    """
-    Description: i needed a way to add cleaning and validation logic, else can use KeyValueWidget + in-model cleaning
-    Usage:
-        from accounts.widgets import JSONKeyValueField
-
-        class MyForm(forms.Form):
-            my_json_field = JSONKeyValueField()
-    """
-    widget = KeyValueWidget()
-
-    def validate(self, value):
-        super().validate(value)
-        if not isinstance(value, dict):
-            raise ValidationError("Must be a JSON object (key-value pairs).")
-        if not any(k.strip() and str(v).strip() for k, v in value.items()):
-            raise ValidationError("At least one valid key-value pair is required.")
-
-    def to_python(self, value):
-        if value is None:
-            return {}
-        if isinstance(value, dict):
-            data = value
-        else:
-            try:
-                data = json.loads(value)
-            except json.JSONDecodeError:
-                raise ValidationError("Invalid JSON format.")
-        cleaned = {}
-        for k, v in data.items():
-            if not k.strip():
-                continue
-            if v not in (None, "", []) and str(v).strip():
-                cleaned[k.strip()] = v
-        return cleaned
-    
-
-
-from django import forms
-from django.utils.safestring import mark_safe
 
 class PDFPreviewWidget(forms.ClearableFileInput):
     """
@@ -99,3 +62,13 @@ class PDFPreviewWidget(forms.ClearableFileInput):
         context = super().get_context(name, value, attrs)
         context['pdf_url'] = value.url if value and hasattr(value, 'url') else None
         return context
+    
+
+
+
+class ColorPickerWidget(forms.TextInput):
+    def __init__(self, attrs=None):
+        default_attrs = {'type': 'color'}
+        if attrs:
+            default_attrs.update(attrs)
+        super().__init__(attrs=default_attrs)
