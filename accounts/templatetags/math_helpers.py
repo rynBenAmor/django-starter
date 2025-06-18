@@ -1,5 +1,6 @@
 from django import template
 import math
+import builtins
 
 """
 Math Helper Template Tags and Filters
@@ -182,7 +183,7 @@ def as_currency(value, symbol="$"):
     except (ValueError, TypeError):
         return f"{symbol}0.00"
 
-import builtins
+
 
 @register.filter
 def min_val(values):

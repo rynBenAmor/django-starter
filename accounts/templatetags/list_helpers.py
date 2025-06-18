@@ -65,8 +65,6 @@ def unique(value):
 
 
 
-
-
 @register.filter
 def length_gt(value, n):
     """
@@ -141,13 +139,18 @@ def paginate(value, page, per_page):
 @register.filter
 def pluck(queryset, attr):
     """
-    Extract a single attribute from each item in a list/queryset as a list
-    Usage: {{ my_list|pluck:"name" }}    
+    Extract a single attribute from each item in an iterable and return a list.
+
+    Usage:
+        {{ my_queryset|pluck:"name" }}
+    
+    Returns:
+        A list of attribute values: ['name1', 'name2', ...]
     """
     try:
         return [getattr(item, attr, None) for item in queryset]
     except Exception:
-        return queryset
+        return []
     
 
 @register.filter
