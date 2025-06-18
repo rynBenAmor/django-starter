@@ -16,6 +16,7 @@ class HoneyPotMixin:
         class MyForm(HoneyPotMixin, forms.Form):
             name = forms.CharField()
     Note: no validation needed here since clean() exists in HoneyPotField()
+          ! HoneyPotMixin must be referenced first
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

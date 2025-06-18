@@ -1,5 +1,4 @@
 from django import template
-from decimal import Decimal
 import math
 
 """
@@ -173,21 +172,7 @@ def modulo(value, arg):
     except (ValueError, TypeError, ZeroDivisionError):
         return 0
 
-@register.filter
-def max_of(value, arg):
-    """Return the maximum of two numeric values."""
-    try:
-        return max(float(value), float(arg))
-    except (ValueError, TypeError):
-        return 0
 
-@register.filter
-def min_of(value, arg):
-    """Return the minimum of two numeric values."""
-    try:
-        return min(float(value), float(arg))
-    except (ValueError, TypeError):
-        return 0
 
 
 @register.filter
@@ -196,3 +181,38 @@ def as_currency(value, symbol="$"):
         return f"{symbol}{float(value):,.2f}"
     except (ValueError, TypeError):
         return f"{symbol}0.00"
+
+import builtins
+
+@register.filter
+def min_val(values):
+    """
+    - For iterables of numeric items
+    - Usage: {{ my_numeric_list|min_val }}
+    """
+    return builtins.min(values) if values else None
+
+@register.filter
+def max_val(values):
+    """
+    - For iterables of numeric items
+    - Usage: {{ my_numeric_list|max_val }}
+    """
+    return builtins.max(values) if values else None
+
+
+@register.filter
+def max_of_two(value, arg):
+    """Return the maximum of two numeric values."""
+    try:
+        return max(float(value), float(arg))
+    except (ValueError, TypeError):
+        return 0
+
+@register.filter
+def min_of_two(value, arg):
+    """Return the minimum of two numeric values."""
+    try:
+        return min(float(value), float(arg))
+    except (ValueError, TypeError):
+        return 0

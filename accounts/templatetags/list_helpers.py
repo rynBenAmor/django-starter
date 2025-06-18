@@ -64,16 +64,7 @@ def unique(value):
         return value
 
 
-@register.filter
-def pluck(value, attr):
-    """
-    Extract a single attribute from each item in a list/queryset.
-    Usage: {{ my_list|pluck:"name" }}
-    """
-    try:
-        return [getattr(item, attr, None) for item in value]
-    except Exception:
-        return value
+
 
 
 @register.filter
@@ -146,3 +137,25 @@ def paginate(value, page, per_page):
     except Exception:
         return value
 
+
+@register.filter
+def pluck(queryset, attr):
+    """
+    Extract a single attribute from each item in a list/queryset as a list
+    Usage: {{ my_list|pluck:"name" }}    
+    """
+    try:
+        return [getattr(item, attr, None) for item in queryset]
+    except Exception:
+        return queryset
+    
+
+@register.filter
+def exclude_none(values):
+    """loops through an iterable and returns a list without None items"""
+    return [v for v in values if v is not None]
+
+@register.filter
+def list_queryset(value):
+    """coerce the queryset into a list"""
+    return list(value)  # Forces evaluation
