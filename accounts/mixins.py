@@ -89,7 +89,7 @@ class LowerTrimInputMixin:
 # * CBV mixins
 # *=================================================================
 
-class FlexibleFormMessageMixin:
+class FormMessageMixin:
     """
     Adds a customizable success message after form submission.
 
