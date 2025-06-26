@@ -27,7 +27,7 @@ LOGGING = {
             "formatter": "simple",
         },
         "file": {
-            "level": "DEBUG", # DEBUG in development
+            "level": "ERROR", # TODO: DEBUG in development
             "class": "logging.FileHandler",
             "formatter": "verbose",
             "filename": BASE_DIR / "django.log",
