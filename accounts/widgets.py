@@ -66,6 +66,33 @@ class PDFPreviewWidget(forms.ClearableFileInput):
 
 
 
+class VideoPreviewWidget(forms.ClearableFileInput):
+
+    template_name = 'widgets/video_preview_widget.html'
+
+    def format_value(self, value):
+        return value
+    
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context['video_url'] = value.url if value and hasattr(value, 'url') else None
+        return context
+
+
+
+class ImagePreviewWidget(forms.ClearableFileInput):
+
+    template_name = 'widgets/image_preview_widget.html'
+
+    def format_value(self, value):
+        return value
+    
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context['image_url'] = value.url if value and hasattr(value, 'url') else None
+        return context
+
+
 class ColorPickerWidget(forms.TextInput):
     def __init__(self, attrs=None):
         default_attrs = {'type': 'color'}

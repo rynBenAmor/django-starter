@@ -1,0 +1,256 @@
+{% load i18n %}
+
+{% if video_url %}
+<div class="video-preview-container">
+    <label class="video-label">{% translate 'Current Video:' %}</label>
+    <div class="video-wrapper">
+        <video controls class="video-preview">
+            <source src="{{ video_url }}" type="video/mp4">
+            {% translate 'Your browser does not support the video tag.' %}
+        </video>
+    </div>
+    <div class="video-actions">
+        <input type="checkbox" name="{{ widget.name }}-clear" id="{{ widget.attrs.id }}-clear" class="video-checkbox">
+        <label for="{{ widget.attrs.id }}-clear" class="video-delete-label">{% translate 'Delete this video' %}</label>
+    </div>
+</div>
+{% endif %}
+<div class="video-upload-container">
+    <label for="{{ widget.attrs.id }}" class="video-upload-label">{% translate 'Replace with new video:' %}</label>
+    <div class="video-drop-zone" id="{{ widget.attrs.id }}-dropzone">
+        <span class="video-drop-message">Drag & drop video file here or</span>
+        <label for="{{ widget.attrs.id }}" class="video-browse-button">Browse files</label>
+        <input type="file" name="{{ widget.name }}" id="{{ widget.attrs.id }}" class="video-upload-input" accept="video/*">
+    </div>
+    <div class="video-filename" id="{{ widget.attrs.id }}-filename"></div>
+    <div class="video-format-hint">{% translate 'Supported formats: MP4, WebM, Ogg' %}</div>
+</div>
+
+<style>
+.video-preview-container {
+    margin-bottom: 1.5em;
+    padding: 1em;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fafbfc;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.video-label {
+    font-weight: 600;
+    margin-bottom: 0.5em;
+    display: block;
+    color: #333;
+}
+
+.video-wrapper {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    background: #000;
+    border-radius: 4px;
+    margin-bottom: 0.75em;
+}
+
+.video-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.video-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.video-checkbox {
+    accent-color: #dc3545;
+}
+
+.video-delete-label {
+    color: #dc3545;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.video-delete-label:hover {
+    color: #bb2d3b;
+}
+
+.video-upload-container {
+    margin-bottom: 1em;
+}
+
+.video-upload-label {
+    font-weight: 600;
+    margin-bottom: 0.5em;
+    display: block;
+    color: #333;
+}
+
+.video-upload-input {
+    display: none;
+}
+
+.video-drop-zone {
+    width: 100%;
+    padding: 2em;
+    border: 2px dashed #bdbdbd;
+    border-radius: 8px;
+    background: #f8f9fa;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.video-drop-zone:hover, .video-drop-zone.dragover {
+    border-color: #6c757d;
+    background: #e9ecef;
+}
+
+.video-drop-message {
+    display: block;
+    margin-bottom: 0.5em;
+    color: #6c757d;
+}
+
+.video-browse-button {
+    display: inline-block;
+    padding: 0.5em 1em;
+    background: #0d6efd;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.video-browse-button:hover {
+    background: #0b5ed7;
+}
+
+.video-filename {
+    margin-top: 0.5em;
+    font-size: 0.9em;
+    color: #495057;
+    word-break: break-all;
+}
+
+.video-format-hint {
+    margin-top: 0.25em;
+    font-size: 0.8em;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Loading spinner for upload */
+.video-uploading {
+    display: none;
+    margin-top: 0.5em;
+}
+
+.video-uploading-spinner {
+    width: 1.5em;
+    height: 1.5em;
+    border: 3px solid rgba(0,0,0,0.1);
+    border-radius: 50%;
+    border-top-color: #0d6efd;
+    animation: spin 1s ease-in-out infinite;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 0.5em;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('{{ widget.attrs.id }}-dropzone');
+    const fileInput = document.getElementById('{{ widget.attrs.id }}');
+    const fileNameDisplay = document.getElementById('{{ widget.attrs.id }}-filename');
+    const videoPreview = document.querySelector('.video-preview');
+    const videoContainer = document.querySelector('.video-preview-container');
+
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    // Highlight drop zone when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    // Handle dropped files
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    // Handle file selection via browse button
+    fileInput.addEventListener('change', function() {
+        if (this.files.length) {
+            handleFiles(this.files);
+        }
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function highlight() {
+        dropZone.classList.add('dragover');
+    }
+
+    function unhighlight() {
+        dropZone.classList.remove('dragover');
+    }
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length) {
+            handleFiles(files);
+        }
+    }
+
+    function handleFiles(files) {
+        const file = files[0];
+        
+        // Check if the file is a video
+        if (file.type.startsWith('video/')) {
+            fileInput.files = files;
+            updateFileName(file.name);
+            
+            // If there's a preview element, update it
+            if (videoPreview) {
+                const videoUrl = URL.createObjectURL(file);
+                videoPreview.src = videoUrl;
+                
+                // Make sure container is visible
+                if (videoContainer) {
+                    videoContainer.style.display = 'block';
+                }
+            }
+        } else {
+            alert('Please upload a video file (MP4, WebM, or Ogg).');
+        }
+    }
+
+    function updateFileName(name) {
+        fileNameDisplay.textContent = 'Selected file: ' + name;
+    }
+});
+</script>

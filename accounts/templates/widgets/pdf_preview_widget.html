@@ -1,16 +1,24 @@
+{% load i18n %}
+
+
 {% if pdf_url %}
     <div class="pdf-preview-container">
         <label class="pdf-label">PDF actuel :</label>
-        <iframe src="{{ pdf_url }}" class="pdf-iframe"></iframe>
+        <iframe title="pdf viewer" src="{{ pdf_url }}" class="pdf-iframe"></iframe>
         <div class="pdf-actions">
             <input type="checkbox" name="{{ widget.name }}-clear" id="{{ widget.attrs.id }}-clear" class="pdf-checkbox">
-            <label for="{{ widget.attrs.id }}-clear" class="pdf-delete-label">Supprimer ce PDF</label>
+            <label for="{{ widget.attrs.id }}-clear" class="pdf-delete-label">{% translate 'Supprimer ce PDF' %}</label>
         </div>
     </div>
 {% endif %}
 <div class="pdf-upload-container">
-    <label for="{{ widget.attrs.id }}" class="pdf-upload-label">Remplacer par un nouveau PDF :</label>
-    <input type="file" name="{{ widget.name }}" id="{{ widget.attrs.id }}" class="pdf-upload-input" accept="application/pdf">
+    <label for="{{ widget.attrs.id }}" class="pdf-upload-label">{% translate 'Remplacer par un nouveau PDF :' %}</label>
+    <div class="pdf-drop-zone" id="{{ widget.attrs.id }}-dropzone">
+        <span class="pdf-drop-message">Glissez-déposez un fichier PDF ici ou</span>
+        <label for="{{ widget.attrs.id }}" class="pdf-browse-button">{% translate 'Parcourir' %}</label>
+        <input type="file" name="{{ widget.name }}" id="{{ widget.attrs.id }}" class="pdf-upload-input" accept="application/pdf">
+    </div>
+    <div class="pdf-filename" id="{{ widget.attrs.id }}-filename"></div>
 </div>
 
 <style>
@@ -57,10 +65,107 @@
     display: block;
 }
 .pdf-upload-input {
+    display: none;
+}
+.pdf-drop-zone {
     width: 100%;
-    padding: 0.4em;
+    padding: 2em;
+    border: 2px dashed #bdbdbd;
+    border-radius: 8px;
+    background: #f8f9fa;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.pdf-drop-zone:hover, .pdf-drop-zone.dragover {
+    border-color: #6c757d;
+    background: #e9ecef;
+}
+.pdf-drop-message {
+    display: block;
+    margin-bottom: 0.5em;
+    color: #6c757d;
+}
+.pdf-browse-button {
+    display: inline-block;
+    padding: 0.5em 1em;
+    background: #0d6efd;
+    color: white;
     border-radius: 4px;
-    border: 1px solid #bdbdbd;
-    background: #fff;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+.pdf-browse-button:hover {
+    background: #0b5ed7;
+}
+.pdf-filename {
+    margin-top: 0.5em;
+    font-size: 0.9em;
+    color: #495057;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('{{ widget.attrs.id }}-dropzone');
+    const fileInput = document.getElementById('{{ widget.attrs.id }}');
+    const fileNameDisplay = document.getElementById('{{ widget.attrs.id }}-filename');
+
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    // Highlight drop zone when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    // Handle dropped files
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    // Handle file selection via browse button
+    fileInput.addEventListener('change', function() {
+        if (this.files.length) {
+            updateFileName(this.files[0].name);
+        }
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function highlight() {
+        dropZone.classList.add('dragover');
+    }
+
+    function unhighlight() {
+        dropZone.classList.remove('dragover');
+    }
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length) {
+            // Check if the file is a PDF
+            if (files[0].type === 'application/pdf') {
+                fileInput.files = files;
+                updateFileName(files[0].name);
+            } else {
+                alert('Veuillez déposer un fichier PDF uniquement.');
+            }
+        }
+    }
+
+    function updateFileName(name) {
+        fileNameDisplay.textContent = 'Fichier sélectionné : ' + name;
+    }
+});
+</script>

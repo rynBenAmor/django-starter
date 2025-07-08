@@ -1,0 +1,268 @@
+{% load static i18n %}
+
+
+{% if image_url %}
+<div class="image-preview-container mb-3">
+    <label class="form-label">{% translate 'Current Image:' %}</label>
+    <div class="image-preview-wrapper">
+        <img src="{{ image_url }}" alt="Preview" class="image-preview img-thumbnail">
+    </div>
+    <div class="image-actions mt-2">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="{{ widget.name }}-clear" id="{{ widget.attrs.id }}-clear">
+            <label class="form-check-label text-danger" for="{{ widget.attrs.id }}-clear">
+                <i class="fa fa-trash"></i> {% translate 'Remove image' %}
+            </label>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="image-upload-container">
+    <label for="{{ widget.attrs.id }}" class="form-label">{% if image_url %}{% translate 'Replace image' %}{% else %}{% translate 'Upload image' %}{% endif %}:</label>
+    <div class="drop-zone {% if not image_url %}drop-zone-empty{% endif %}" id="{{ widget.attrs.id }}-dropzone">
+        <div class="drop-zone-content">
+            <i class="fa fa-cloud-upload drop-zone-icon"></i>
+            <div class="drop-zone-text">
+                <span class="drop-zone-title">{% translate 'Drag & drop your image here' %}</span>
+                <span class="drop-zone-subtitle">{% translate 'or click to browse' %}</span>
+            </div>
+            <input type="file" name="{{ widget.name }}" id="{{ widget.attrs.id }}" class="drop-zone-input" accept="image/*">
+        </div>
+    </div>
+    <div class="invalid-feedback" id="{{ widget.attrs.id }}-feedback"></div>
+</div>
+
+<style>
+.image-preview-container {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+.image-preview-wrapper {
+    position: relative;
+    max-width: 100%;
+}
+
+.image-preview {
+    max-height: 300px;
+    max-width: 100%;
+    display: block;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+.drop-zone {
+    border: 2px dashed #adb5bd;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+.drop-zone-empty {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.drop-zone:hover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.drop-zone.dragover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.2);
+    transform: scale(1.01);
+}
+
+.drop-zone-content {
+    pointer-events: none;
+}
+
+.drop-zone-icon {
+    font-size: 3rem;
+    color: #0d6efd;
+    margin-bottom: 1rem;
+}
+
+.drop-zone-title {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #212529;
+}
+
+.drop-zone-subtitle {
+    display: block;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.drop-zone-input {
+    display: none;
+}
+
+.image-preview-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('{{ widget.attrs.id }}-dropzone');
+    const fileInput = document.getElementById('{{ widget.attrs.id }}');
+    const feedback = document.getElementById('{{ widget.attrs.id }}-feedback');
+    const previewContainer = document.querySelector('.image-preview-container');
+    const previewWrapper = document.querySelector('.image-preview-wrapper');
+    const previewImage = document.querySelector('.image-preview');
+    
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    // Highlight drop zone
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    // Handle drop
+    dropZone.addEventListener('drop', handleDrop, false);
+    
+    // Handle click
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Handle file selection
+    fileInput.addEventListener('change', function() {
+        if (this.files.length) {
+            handleFiles(this.files);
+        }
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function highlight() {
+        dropZone.classList.add('dragover');
+    }
+
+    function unhighlight() {
+        dropZone.classList.remove('dragover');
+    }
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length) {
+            handleFiles(files);
+        }
+    }
+
+    function handleFiles(files) {
+        const file = files[0];
+        
+        // Validate file type
+        if (!file.type.match('image.*')) {
+            showError('Please upload an image file (JPEG, PNG, etc.)');
+            return;
+        }
+        
+        // Validate file size (optional)
+        if (file.size > 5 * 1024 * 1024) { // 5MB
+            showError('Image size should be less than 5MB');
+            return;
+        }
+        
+        // Clear any previous errors
+        clearError();
+        
+        // Show loading state
+        showLoading();
+        
+        // Create preview
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            // Update preview
+            if (!previewContainer) {
+                // Create preview container if it doesn't exist
+                const newPreview = `
+                    <div class="image-preview-container mb-3">
+                        <label class="form-label">Preview:</label>
+                        <div class="image-preview-wrapper">
+                            <img src="${e.target.result}" alt="Preview" class="image-preview img-thumbnail">
+                        </div>
+                    </div>
+                `;
+                dropZone.insertAdjacentHTML('beforebegin', newPreview);
+            } else {
+                // Update existing preview
+                previewImage.src = e.target.result;
+            }
+            
+            // Hide empty state styling
+            dropZone.classList.remove('drop-zone-empty');
+            
+            // Hide loading
+            hideLoading();
+        };
+        
+        reader.readAsDataURL(file);
+        
+        // Update file input
+        fileInput.files = files;
+    }
+
+    function showLoading() {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'image-preview-loading';
+        loadingDiv.innerHTML = '<div class="spinner-border text-primary" role="status"></div>';
+        previewWrapper.appendChild(loadingDiv);
+    }
+
+    function hideLoading() {
+        const loadingDiv = previewWrapper.querySelector('.image-preview-loading');
+        if (loadingDiv) {
+            loadingDiv.remove();
+        }
+    }
+
+    function showError(message) {
+        feedback.textContent = message;
+        feedback.style.display = 'block';
+        dropZone.classList.add('is-invalid');
+    }
+
+    function clearError() {
+        feedback.textContent = '';
+        feedback.style.display = 'none';
+        dropZone.classList.remove('is-invalid');
+    }
+});
+</script>
