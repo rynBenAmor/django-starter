@@ -61,6 +61,7 @@ class IPWhitelistMiddleware:
     """
     ? situational:
     Restricts access to specified paths (e.g., admin) to whitelisted IP addresses.
+    Note: logs with 'critical' tag will promptly auto-send an email to the the settings.ADMINS list, can change to error or warning
     """
     
     def __init__(self, get_response):

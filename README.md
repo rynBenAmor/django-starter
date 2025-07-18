@@ -1,16 +1,14 @@
-# Django Starter with Bootstrap 5, Font Awesome 6, Vite for Packages
+# a personal maximalist django 5.2 starter
 
-A personal Django starter template with:
+This project contains:
 
 - Django 5.2
-- The essentials of an Auth workflow
-- Bootstrap 5 via SCSS
-- Font Awesome 6 Free via CDN (for now, because I can't be bothered with webfonts 404)
-- Vite for fast bundling (JS & SCSS)
+- The essentials of an Auth workflow and settings.py
+- Bootstrap 5 via Vite + Font Awesome 6 Free via CDN (for now, because I can't be bothered with webfonts 404)
 - Static and media files set up (ready for production)
-- Simple translation toggler (can delete or add django-modeltranslation on top of it for a complete solution)
-- Extra utility filters/components/widgets/functions/payment methods... (most things are centralized in accounts app)
-- Used some django 3rd party packages (django-htmlmin, django-ratelimit...)
+- Simple translation and theme toggler (can delete or add django-modeltranslation on top of it for a complete solution, decide early or suffer)
+- Extra utility: filters/components/widgets/functions/payment methods etc... (most things are centralized in accounts/ app)
+- 3rd party packages include (django-htmlmin, django-ratelimit...)
 
 ---
 
@@ -51,6 +49,9 @@ PAYMEE_API_KEY=''
 ```bash
 git clone "https://github.com/rynBenAmor/django-starter-bt5.git"
 cd django-starter-bt5
+python -m venv venv
+venv/scripts/activate
+pip install -r requirements.txt
 
 npm install
 npx vite build # this will auto create a BASE_DIR / 'static/'

@@ -468,7 +468,10 @@ class SpamDetector:
         )
 
     def contains_profanity(self, message: str, extra_keywords: Set[str]) -> bool:
-        """this can be generic"""
+        """
+        this can be generic
+        can extend the using https://github.com/zacanger/profane-words/blob/master/words.json
+        """
         profanity_words = {
             "fuck",
             "shit",

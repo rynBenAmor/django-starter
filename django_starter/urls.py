@@ -1,6 +1,5 @@
 """
-
-**Future update for URL translation with i18n_patterns:**  
+TODO: URL translation with i18n_patterns:
 add the following in the main urls.py:  
 
     from django.conf.urls.i18n import i18n_patterns #possible url translation
@@ -12,8 +11,6 @@ add the following in the main urls.py:
     )
 
 Ensure all URLs use `gettext`, e.g., `path(_('login/'))`
-
-
 """
 
 from django.conf import settings
@@ -21,7 +18,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic.base import TemplateView
-
 
 
 
@@ -33,7 +29,6 @@ urlpatterns = [
 
     path('', include('home.urls')),#can delete
 ]
-
 
 
 
