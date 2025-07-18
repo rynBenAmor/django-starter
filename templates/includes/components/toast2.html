@@ -1,26 +1,29 @@
-
 {% load i18n %}
-<!--an alternative to toast-->
 
-{% for message in messages %}
-<!-- Create a toast for each message -->
-<div class="toast toast-{{ message.tags|default:'info' }}" data-tags="{{ message.tags|default:'info' }}">
+<!-- a pure css alternative  -->
+ 
+<div class="toast-container">
+  {% for message in messages %}
+  <div class="toast_v2 toast-{{ message.tags|default:'info' }}" data-tags="{{ message.tags|default:'info' }}">
     <div class="toast-content">
-        <i class="toast-icon"></i>
+      <i class="toast-icon"></i>
+      <div class="toast-message-wrapper">
         <p class="toast-message">{{ message }}</p>
+        <div class="toast-progress"></div>
+      </div>
     </div>
-    <button class="toast-close">
-        <i class="fas fa-times"></i>
+    <button type="button" title="close" class="toast-close">
+      <i class="fas fa-times"></i>
     </button>
+  </div>
+  {% endfor %}
 </div>
-{% endfor %}
-
-
-
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const toasts = document.querySelectorAll(".toast");
+        const toastContainer = document.querySelector('.toast-container');
+        const toasts = document.querySelectorAll('.toast_v2');
+        console.log(toasts)
         const icons = {
             success: "fa-circle-check",
             error: "fa-circle-exclamation",
@@ -29,68 +32,93 @@
             debug: "fa-bug"
         };
 
-        toasts.forEach((toast) => {
-            // Get the message type (tags) from data attribute or default to 'info'
+        toasts.forEach((toast, index) => {
             const tags = toast.dataset.tags || 'info';
             const iconClass = icons[tags] || icons['info'];
+            const iconEl = toast.querySelector('.toast-icon');
+            const closeBtn = toast.querySelector('.toast-close');
+            const progressEl = toast.querySelector('.toast-progress');
 
-            // Set the icon
-            const iconEl = toast.querySelector(".toast-icon");
+            // Set icon
             iconEl.className = `toast-icon fas ${iconClass}`;
 
-            // Show the toast
-            toast.classList.add("show");
+            // Position toast with stacking offset
+            //toast.style.bottom = `${20 + (index * 70)}px`;
 
-            // Add click handler to close button
-            const closeBtn = toast.querySelector(".toast-close");
-            closeBtn.addEventListener('click', () => {
-                toast.classList.remove("show");
-            });
+            // Show toast
+            setTimeout(() => toast.classList.add('show'), 50);
 
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                toast.classList.remove("show");
-            }, 5000);
+            // Start progress bar animation
+            if (progressEl) {
+                progressEl.style.animation = `progress ${5000}ms linear forwards`;
+            }
+
+            // Close button handler
+            closeBtn.addEventListener('click', () => dismissToast(toast));
+
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => dismissToast(toast), 5000);
         });
+
+        function dismissToast(toast) {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }
     });
 </script>
 
 <style>
-    /* ===== TOAST STYLES ===== */
-    .toast {
+    /* Toast Container */
+    .toast-container {
         position: fixed;
         bottom: 20px;
         right: 20px;
+        z-index: 1050;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* Base Toast Styles */
+    .toast_v2 {
+        position: relative;
+        margin: 0;
         max-width: 350px;
-        padding: 16px 20px;
+        padding: 16px;
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         gap: 12px;
-        z-index: 1000;
         color: white;
-        transform: translateY(20px);
+        transform: translateX(20px);
         opacity: 0;
         transition: all 0.3s ease;
     }
 
-    /* Toast states */
-    .toast.show {
-        transform: translateY(0);
+    .toast_v2.show {
+        transform: translateX(0);
         opacity: 1;
     }
 
-    /* Toast content layout */
+    /* Toast Content */
     .toast-content {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 12px;
+        flex-grow: 1;
     }
 
     .toast-icon {
         font-size: 20px;
+        margin-top: 2px;
+    }
+
+    .toast-message-wrapper {
+        flex-grow: 1;
+        position: relative;
+        padding-bottom: 4px;
     }
 
     .toast-message {
@@ -99,15 +127,37 @@
         line-height: 1.4;
     }
 
-    /* Close button */
+    /* Progress Bar */
+    .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: rgba(255, 255, 255, 0.3);
+        transform-origin: left;
+        animation: none;
+    }
+
+    @keyframes progress {
+        from {
+            transform: scaleX(1);
+        }
+
+        to {
+            transform: scaleX(0);
+        }
+    }
+
+    /* Close Button */
     .toast-close {
         background: transparent;
         border: none;
         color: inherit;
         opacity: 0.7;
         cursor: pointer;
-        padding: 4px;
-        align-self: flex-start;
+        padding: 2px;
+        margin-left: 8px;
         transition: opacity 0.2s;
     }
 
@@ -115,7 +165,7 @@
         opacity: 1;
     }
 
-    /* Color variants */
+    /* Color Variants */
     .toast-success {
         background-color: #28a745;
     }
@@ -130,5 +180,9 @@
 
     .toast-info {
         background-color: #17a2b8;
+    }
+
+    .toast-debug {
+        background-color: #6c757d;
     }
 </style>
