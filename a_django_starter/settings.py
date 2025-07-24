@@ -107,7 +107,7 @@ MIDDLEWARE = [
 
 ]
 
-ROOT_URLCONF = 'django_starter.urls'
+ROOT_URLCONF = 'a_django_starter.urls'
 
 TEMPLATES = [
     {
@@ -126,7 +126,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'django_starter.wsgi.application'
+WSGI_APPLICATION = 'a_django_starter.wsgi.application'
 
 
 

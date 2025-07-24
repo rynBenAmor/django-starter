@@ -3,8 +3,9 @@
 This project contains:
 
 - Django 5.2
-- The essentials of an Auth workflow and settings.py
+- The essentials of an Auth workflow and security settings.py
 - Bootstrap 5 via Vite + Font Awesome 6 Free via CDN (for now, because I can't be bothered with webfonts 404)
+- auto browser reload via django-browser-reload==1.18.0 (toggleable using the DJANGO_BROWSER_RELOAD variable)
 - Static and media files set up (ready for production)
 - Simple translation and theme toggler (can delete or add django-modeltranslation on top of it for a complete solution, decide early or suffer)
 - Extra utility: filters/components/widgets/functions/payment methods etc... (most things are centralized in accounts/ app)

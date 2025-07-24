@@ -97,15 +97,15 @@ msgstr "informations d'identification non valides"
 msgid "please correct the errors of the form"
 msgstr "veuillez corriger les erreurs du formulaire"
 
-#: .\django_starter\settings.py:178
+#: .\a_django_starter\settings.py:178
 msgid "English"
 msgstr "Anglais"
 
-#: .\django_starter\settings.py:179
+#: .\a_django_starter\settings.py:179
 msgid "French"
 msgstr "Français"
 
-#: .\django_starter\urls.py:20
+#: .\a_django_starter\urls.py:20
 msgid "accounts/"
 msgstr "comptes/"
 
