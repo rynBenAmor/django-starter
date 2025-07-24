@@ -27,6 +27,7 @@ DJANGO_IS_PRODUCTION=False
 # You can use: python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
 DJANGO_SECRET_KEY="django-insecure-r01(sc^4!ugxu##tmb*q&5l!@o7tejc3#%50mh9nn6od3hss#c"
 DJANGO_ADMIN_EMAIL_1=""
+DJANGO_BROWSER_RELOAD=True
 
 DB_TYPE='sqlite'
 DB_NAME=''

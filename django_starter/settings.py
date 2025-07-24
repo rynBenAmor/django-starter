@@ -2,20 +2,25 @@
 from pathlib import Path
 from decouple import config
 from .logging import LOGGING
-from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
-
+# * ----------------------------------------------------------------------------------------------------------
+# * variable setup
+# * ----------------------------------------------------------------------------------------------------------
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DJANGO_SECRET_KEY = config('DJANGO_SECRET_KEY', cast=str)
 DJANGO_IS_PRODUCTION = config('DJANGO_IS_PRODUCTION', default=True, cast=bool)
 DB_TYPE = config('DB_TYPE')
-print(DB_TYPE)
-print(f"----production is set to : {DJANGO_IS_PRODUCTION}-----")
+DJANGO_CUSTOM_ADMIN_URL ="admin/"
+DJANGO_BROWSER_RELOAD = config('DJANGO_BROWSER_RELOAD', default=False, cast=bool)
 
+print(f"---- production is set to: {DJANGO_IS_PRODUCTION}, DB: {DB_TYPE}, Auto-browser-reload: {DJANGO_BROWSER_RELOAD} -----")
 
+# * ----------------------------------------------------------------------------------------------------
+# * Security settings 
+# * ----------------------------------------------------------------------------------------------------
 SECRET_KEY = DJANGO_SECRET_KEY
 
 DEBUG = not DJANGO_IS_PRODUCTION
@@ -61,6 +66,9 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin" # cuz 'strict-origin' breaks HTTP_REFERER
 
 
+# * ----------------------------------------------------------------------------------------------------------
+# * app definitions
+# * ----------------------------------------------------------------------------------------------------------
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -121,9 +129,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'django_starter.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# * ----------------------------------------------------------------------------------------------------------
+# * Database
+# * ----------------------------------------------------------------------------------------------------------
 
 if DB_TYPE == 'sqlite':  # Switch to SQLite
 
@@ -166,8 +175,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
+# * ----------------------------------------------------------------------------------------------------------
+# * Internationalization
+# * ----------------------------------------------------------------------------------------------------------
 
 LANGUAGE_CODE = 'en'
 
@@ -188,7 +198,9 @@ LOCALE_PATHS = [
 ]
 
 
-# https://docs.djangoproject.com/en/dev/topics/auth/customizing/#substituting-a-custom-user-model
+# * ----------------------------------------------------------------------------------------------------------
+# * AUthentication
+# * ----------------------------------------------------------------------------------------------------------
 AUTHENTICATION_BACKENDS = [
     'accounts.backends.AuthByEmailBackend',  # your email auth backend
 ]
@@ -200,8 +212,10 @@ LOGIN_URL = 'accounts:login'  # Namespace is specified as 'accounts'
 LOGOUT_REDIRECT_URL = 'accounts:login'
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
+# * ----------------------------------------------------------------------------------------------------------
+# * Static files (CSS, JavaScript, Images)
+# * ----------------------------------------------------------------------------------------------------------
 
 # Static & Media
 STATIC_URL = '/static/'
@@ -222,8 +236,9 @@ STORAGES = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+# * ----------------------------------------------------------------------------------------------------------
+# * Mailing
+# * ----------------------------------------------------------------------------------------------------------
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -254,3 +269,10 @@ FLOUCI_APP_SECRET = config('FLOUCI_APP_SECRET', cast=str, default=None)
 
 #https://www.paymee.tn/paymee-integration-with-redirection/
 PAYMEE_API_KEY = config('PAYMEE_API_KEY', cast=str, default=None)
+
+# * ----------------------------------------------------------------------------------------------------------
+# * Development auto reload
+# * ----------------------------------------------------------------------------------------------------------
+if DJANGO_BROWSER_RELOAD and DEBUG:
+    INSTALLED_APPS += ['django_browser_reload']
+    MIDDLEWARE += ["django_browser_reload.middleware.BrowserReloadMiddleware"]

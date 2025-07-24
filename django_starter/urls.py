@@ -22,13 +22,18 @@ from django.views.generic.base import TemplateView
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path(settings.DJANGO_CUSTOM_ADMIN_URL, admin.site.urls),
     path('accounts/', include('accounts.urls', namespace='accounts')),
 
-    path('robots.txt', TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),#can use nginx instead
+    path('robots.txt', TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),#can use NGINX instead
 
     path('', include('home.urls')),#can delete
 ]
+
+
+# ? auto reload on template change in dev, preferably do not collectstatic while True
+if settings.DJANGO_BROWSER_RELOAD and settings.DEBUG:
+    urlpatterns += [path("__reload__/", include("django_browser_reload.urls")),]
 
 
 
