@@ -49,7 +49,7 @@ PAYMEE_API_KEY=''
 ## 📦 Install Dependencies
 
 ```bash
-git clone "https://github.com/rynBenAmor/django-starter-bt5.git"
+git clone "https://github.com/rynBenAmor/django-starter.git"
 cd django-starter-bt5
 python -m venv venv
 venv/scripts/activate

@@ -1,266 +1,243 @@
-<!--widgets/key_value_widget.html -->
+<!-- widgets/key_value_widget.html -->
+ <!-- ? Note: script and style can be injected elsewhere to avoid repetition if multiple widgets-->
+
+
+<div class="key-value-widget" id="{{ widget.attrs.id }}-container">
+  <table class="key-value-table">
+    <thead>
+      <tr>
+        <th>Key</th>
+        <th>Value</th>
+        <th style="color: transparent; font-size: 0;"> actions </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for key, value in widget.value %}
+      <tr>
+        <td>
+          <input type="text" 
+                 name="{{ widget.name }}_key" 
+                 value="{{ key }}" 
+                 placeholder="Key" 
+                 class="key-input">
+        </td>
+        <td>
+          <input type="text" 
+                 name="{{ widget.name }}_value" 
+                 value="{{ value }}" 
+                 placeholder="Value" 
+                 class="value-input">
+        </td>
+        <td>
+          <button title="remove" type="button" class="remove-row-btn">
+            <i class="fa fa-times"></i>
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <button type="button" class="add-row-btn">
+    <i class="fa fa-plus"></i> Add Row
+  </button>
+</div>
+
 <style>
-    .key-value-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        margin-bottom: 4px;
-        background-color: white;
-        color: #333;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
-
-
-    .key-value-table th, 
+  /* Compact widget styling */
+  .key-value-widget {
+    max-width: 440px;
+    font-size: 13px;
+  }
+  
+  .key-value-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    background: white;
+    border: 1px solid #ddd;
+  }
+  
+  .key-value-table th,
+  .key-value-table td {
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+  }
+  
+  .key-value-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+    text-align: left;
+  }
+  
+  .key-value-table input[type="text"] {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    box-sizing: border-box;
+    font-size: 13px;
+  }
+  
+  .key-value-table input[type="text"]:focus {
+    outline: none;
+    border-color: #79aec8;
+  }
+  
+  .remove-row-btn {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 12px;
+  }
+  
+  .remove-row-btn:hover {
+    color: #ff4444;
+  }
+  
+  .add-row-btn {
+    background: #79aec8;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  
+  .add-row-btn:hover {
+    background: #609ab6;
+  }
+  
+  /* Make it even more compact for very small screens */
+  @media (max-width: 440px) {
+    .key-value-table th,
     .key-value-table td {
-        padding: 12px 15px;
-        text-align: left;
-        border: 1px solid #eaeaea;
+      padding: 4px 6px;
     }
-
-
-    .key-value-table th {
-        background-color: #ff6b4a;
-        color: white;
-        font-weight: 600;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border-color: #ff6b4a;
-    }
-
-    .key-value-table td {
-        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        font-weight: 500;
-        vertical-align: middle;
-    }
-
-    .key-value-table tbody tr:nth-child(even) {
-        background-color: #f8f9fa;
-    }
-
-    .key-value-table tbody tr:hover {
-        background-color: #f1f3f5;
-    }
-
+    
     .key-value-table input[type="text"] {
-        width: 100%;
-        padding: 8px 12px;
-        margin: 0;
-        box-sizing: border-box;
-        background-color: white;
-        color: #333;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-family: inherit;
-        font-size: 0.9rem;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      padding: 3px 4px;
     }
-
-    .key-value-table input[type="text"]:focus {
-        outline: none;
-        border-color: #3498db;
-        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    
+    .add-row-btn {
+      padding: 4px 8px;
     }
-
-    .key-value-table input[type="text"]::placeholder {
-        color: #999;
-        opacity: 1;
-    }
-
-    /* Button Styling */
-    .key-value-table button {
-        padding: 8px 16px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.85rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        border: none;
-    }
-
-    .key-value-table .remove-row {
-        background-color: #ff4444;
-        color: white;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-
-    .key-value-table .remove-row:hover {
-        background-color: #cc0000;
-        transform: translateY(-1px);
-    }
-
-    .key-value-table .remove-row:active {
-        transform: translateY(0);
-    }
-
-    #kv-add-row {
-        background-color: #3498db;
-        color: white;
-        font-weight: 600;
-        padding: 10px 20px;
-        border-radius: 6px;
-        margin-top: 10px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
-    }
-
-    #kv-add-row:hover {
-        background-color: #2980b9;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
-    }
-
-    #kv-add-row:active {
-        transform: translateY(0);
-    }
-
-    /* Responsive Table - Improved Version */
-    @media (max-width: 768px) {
-        .key-value-table {
-            display: block;
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            box-shadow: none;
-        }
-        
-        .key-value-table thead {
-            display: table-header-group; /* Keep header visible */
-        }
-        
-        .key-value-table th {
-            font-size: 0.8rem;
-            padding: 8px 10px;
-        }
-        
-        .key-value-table tbody {
-            display: block;
-        }
-        
-        .key-value-table tr {
-            display: table;
-            width: 100%;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .key-value-table td {
-            display: table-cell;
-            padding: 10px 12px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        /* Remove data-label pseudo-elements since we're keeping headers */
-        .key-value-table td::before {
-            content: none;
-        }
-        
-        /* Make inputs full width but not flex */
-        .key-value-table input[type="text"] {
-            width: 100%;
-        }
-        
-        /* Adjust button sizing */
-        .key-value-table .remove-row {
-            padding: 6px 12px;
-            font-size: 0.8rem;
-        }
-    }
-
-    /* For very small screens (optional) */
-    @media (max-width: 480px) {
-        .key-value-table th, 
-        .key-value-table td {
-            padding: 8px 10px;
-            font-size: 0.85rem;
-        }
-        
-        .key-value-table input[type="text"] {
-            padding: 6px 10px;
-            font-size: 0.85rem;
-        }
-    }
+  }
 </style>
 
 
-<table id="{{ widget.attrs.id }}" class="key-value-table">
-    <thead>
-        <tr>
-            <th>Nom</th>
-            <th>Valeur</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for key, value in widget.value %}
-        <tr>
-            <td><input type="text" name="{{ widget.name }}_key" value="{{ key }}" placeholder="Example: couleur" /></td>
-            <td><input type="text" name="{{ widget.name }}_value" value="{{ value }}" placeholder="Example: bleu" /></td>
-            <td><button type="button" class="remove-row">Retirer</button></td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<button type="button" id="kv-add-row" class="add-row">Ajouter une autre ligne <i class="fa-regular fa-square-plus fa-xl"></i> </span></button>
-
-
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const table = document.getElementById("{{ widget.attrs.id }}");
-        const addRowButton = document.getElementById('kv-add-row');
+  (function () {
 
-        addRowButton.addEventListener('click', function () {
-            const newRow = createNewRow();
-            table.querySelector('tbody').appendChild(newRow);
-        });
+    function initKeyValueWidgets() {
+        document.querySelectorAll('.key-value-widget').forEach(function (container) {
 
-        table.addEventListener('click', function (event) {
-            if (event.target.classList.contains('remove-row')) {
-                const row = event.target.closest('tr');
+            const table = container.querySelector('.key-value-table');
+            const tbody = table.querySelector('tbody');
+            const addButton = container.querySelector('.add-row-btn');
 
+            function addRow(key = '', value = '') {
+                const lastRow = tbody.lastElementChild;
+                if (lastRow) {
+                    const lastKey = lastRow.querySelector('.key-input').value.trim();
+                    const lastValue = lastRow.querySelector('.value-input').value.trim();
+                    if (!lastKey && !lastValue) {
+                        lastRow.querySelector('.key-input').focus();
+                        return;
+                    }
+                }
+
+                // ! important : django widget view expects keys = data.getlist(f'{name}_key') and values = data.getlist(f'{name}_value')
+                //container.id == id_main-${index}-specifications-container, we must clean it first to match the {{widget.name}}
+
+                const keyName = `${container.id}_key`.replace('-container', '').replace('id_', '').trim()
+
+                const valueName = `${container.id}_value`.replace('-container', '').replace('id_', '').trim()
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+            <td>
+              <input type="text" 
+                    name="${keyName}" 
+                    value="${key}" 
+                    placeholder="Key" 
+                    class="key-input">
+            </td>
+            <td>
+              <input type="text" 
+                    name="${valueName}" 
+                    value="${value}" 
+                    placeholder="Value" 
+                    class="value-input">
+            </td>
+            <td>
+              <button type="button" class="remove-row-btn">
+                <i class="fa fa-times"></i>
+              </button>
+            </td>
+          `;
+
+                tbody.appendChild(row);
+                row.querySelector('.key-input').focus();
+            }
+
+            function removeRow(row) {
                 row.remove();
+            }
 
+            table.addEventListener('click', function (e) {
+                if (e.target.closest('.remove-row-btn')) {
+                    removeRow(e.target.closest('tr'));
+                }
+            });
+
+            addButton.addEventListener('click', function () {
+                addRow();
+            });
+
+            if (tbody.querySelectorAll('tr').length === 0) {
+                addRow();
             }
         });
+    }
 
-        function createNewRow() {
-            const row = document.createElement('tr');
+    
+    document.addEventListener('DOMContentLoaded',
+        /*
+        * // ? ISSUE: For client-side-rendered widgets (e.g. added via "Add another" in Django admin),
+        * // the inputs do NOT include {{ widget.name }} because that only exists server-side.
+        
+        * // * GOOD NEWS: The admin panel *does* assign a unique {{ widget.attrs.id }} to each new inline,
+        * // and we can reliably use that in our JavaScript to reconstruct the expected input names.
 
-            const keyCell = document.createElement('td');
-            const keyInput = document.createElement('input');
-            keyInput.type = 'text';
-            keyInput.name = "{{ widget.name }}_key";
-            keyCell.appendChild(keyInput);
+        * // ? PROBLEM: We have no reliable hook into the exact moment when Django injects these new inlines.
+        * // Their lifecycle is async and undocumented — sometimes they appear after DOMContentLoaded,
+        * // sometimes not at all if JS hasn’t kicked in yet.
 
-            const valueCell = document.createElement('td');
-            const valueInput = document.createElement('input');
-            valueInput.type = 'text';
-            valueInput.name = "{{ widget.name }}_value";
-            valueCell.appendChild(valueInput);
+        * // * SOLUTION: Use polling (setInterval) to repeatedly scan and initialize widgets as they appear.
+        * // Yes, it's inefficient, but it **HECKIN' WORKS**, and that’s all that matters for now.
 
-            const actionsCell = document.createElement('td');
-            const removeButton = document.createElement('button');
-            removeButton.type = 'button';
-            removeButton.classList.add('remove-row');
-            removeButton.textContent = 'Retirer';
-            actionsCell.appendChild(removeButton);
+        * // TODO (future): Replace with a MutationObserver or a Django-specific hook for better performance.
 
-            row.appendChild(keyCell);
-            row.appendChild(valueCell);
-            row.appendChild(actionsCell);
+        */
 
-            return row;
+        
+        container = document.querySelector('.key-value-widget')); // make sure i'm not polling nothing
+
+        if (container) {
+           
+            let loopCounter = 0;
+            setInterval(() => {
+                console.log("KV widget initiation loop counter n°", loopCounter)
+                initKeyValueWidgets();
+                loopCounter++;
+            }, 1000);
+
         }
-    });
+
+
+})();
 </script>
