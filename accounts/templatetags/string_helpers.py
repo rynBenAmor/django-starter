@@ -1,6 +1,11 @@
 from django import template
 from django.utils.html import strip_tags as dj_strip_tags
 from django.utils.text import slugify as dj_slugify
+from django.utils.html import strip_tags
+import html
+import re
+
+
 
 register = template.Library()
 
@@ -167,3 +172,14 @@ def center(value, args):
         return str(value).center(int(width), str(symbol))
     except Exception:
         return value
+
+
+@register.filter(name='raw_text')
+def raw_text(value):
+    """ completely strip html tags and normalize whitespace (useful in richTextField) """
+    if not value:
+        return ''
+    text = strip_tags(value)
+    text = html.unescape(text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()

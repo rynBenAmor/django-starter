@@ -1,6 +1,6 @@
 #this is a starter Nginx configuration file for a Django project with security and performance optimizations (edit as needed).
-# it should exist in /etc/nginx/sites-available/myproject
-# and be symlinked to /etc/nginx/sites-enabled/myproject
+# it should exist in /etc/nginx/sites-available/myproject.conf
+# and be symlinked to /etc/nginx/sites-enabled/myproject.conf
 # also, can edit /etc/nginx/nginx.conf for global settings
 
 # to create the symlink:
@@ -21,6 +21,9 @@ server {
 
     # --- Project Base Directory ---
     set $base /path/to/project;
+
+    # set a bad bot variable
+    set $bad_bot 0;
 
     # --- Logging ---
     access_log /var/log/nginx/access.log;
@@ -83,10 +86,21 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # --- Block Suspicious User-Agents ---
-    if ($http_user_agent ~* (masscan|python|curl|wget|libwww|scan|nmap|nikto|fuzzer|bot|spider|scrapy|httpclient|Go-http-client|Java|perl|ruby|php|^$)) {
+    # --- Block Suspicious User-Agents ---    
+
+    if ($http_user_agent ~* (masscan|python|curl|wget|libwww|scan|nmap|nikto|fuzzer|scrapy|httpclient|Go-http-client|perl|ruby|php|^$)) {
+        set $bad_bot 1;
+    }
+
+    # WHITELIST SOCIAL MEDIA BOTS
+    if ($http_user_agent ~* (Googlebot|Bingbot|LinkedInBot|Slackbot|Twitterbot|facebookexternalhit|WhatsApp|TelegramBot|Pinterest)) {
+        set $bad_bot 0;
+    }
+
+    if ($bad_bot = 1) {
         return 403;
     }
+
 
     # --- Block Exploit Attempts ---
     location ~* (eval\()|(union.*select)|(base64_) {

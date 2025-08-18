@@ -34,7 +34,7 @@ import json
 
 
 # * ==========================================================
-# * String & Random Utilities
+# * String & miscellaneous Utilities
 # * ==========================================================
 
 
@@ -141,6 +141,18 @@ def unique_slugify(instance, value, slug_field_name="slug"):
         num += 1
     setattr(instance, slug_field_name, unique_slug)
     return unique_slug
+
+
+def normalize_dict_reader(reader):
+    """
+    usage:
+        for row in normalize_dict_reader(reader):
+            ref = row.get('name')
+            price = row.get('price')
+    """
+    reader.fieldnames = [name.strip().lower() for name in reader.fieldnames]
+    for row in reader:
+        yield {k.strip().lower(): v for k, v in row.items()}
 
 
 # * ==========================================================
