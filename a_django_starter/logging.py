@@ -1,6 +1,10 @@
 #logging.py
 from pathlib import Path
+import os
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+LOG_DIR = BASE_DIR / "logs"
+os.makedirs(LOG_DIR, exist_ok=True)
 
 LOGGING = {
     "version": 1,
@@ -27,10 +31,10 @@ LOGGING = {
             "formatter": "simple",
         },
         "file": {
-            "level": "ERROR", # TODO: DEBUG in development
+            "level": "WARNING", #  ! DEBUG in development
             "class": "logging.FileHandler",
             "formatter": "verbose",
-            "filename": BASE_DIR / "django.log",
+            "filename": LOG_DIR / "django.log",
         },
         "mail_admins": {
             "level": "ERROR",

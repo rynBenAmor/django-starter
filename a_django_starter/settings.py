@@ -12,11 +12,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 DJANGO_SECRET_KEY = config('DJANGO_SECRET_KEY', cast=str)
 DJANGO_IS_PRODUCTION = config('DJANGO_IS_PRODUCTION', default=True, cast=bool)
+DJANGO_ALLOWED_HOSTS = [h.strip() for h in config('DJANGO_ALLOWED_HOSTS', default='').split(',') if h.strip()]
 DB_TYPE = config('DB_TYPE')
-DJANGO_CUSTOM_ADMIN_URL ="admin/"
+
+if DJANGO_IS_PRODUCTION:    
+    DJANGO_CUSTOM_ADMIN_URL ="some/custom/abstract/url/"
+else:
+    DJANGO_CUSTOM_ADMIN_URL ="admin/" # ? to keep logs readable in dev
+
 DJANGO_BROWSER_RELOAD = config('DJANGO_BROWSER_RELOAD', default=False, cast=bool)
 
-print(f"---- production is set to: {DJANGO_IS_PRODUCTION}, DB: {DB_TYPE}, Auto-browser-reload: {DJANGO_BROWSER_RELOAD} -----")
+print(
+    "[==================]\n"
+    f"Production: {DJANGO_IS_PRODUCTION}\n"
+    f"DATABASE: {DB_TYPE}\n"
+    f"Hosts: {DJANGO_ALLOWED_HOSTS}\n"
+    f"HMR: {DJANGO_BROWSER_RELOAD}\n"
+    "[==================]\n"
+)
 
 # * ----------------------------------------------------------------------------------------------------
 # * Security settings 
@@ -27,15 +40,16 @@ DEBUG = not DJANGO_IS_PRODUCTION
 
 HTML_MINIFY = True #django-htmlmin
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = DJANGO_ALLOWED_HOSTS
 
 INTERNAL_IPS = ["127.0.0.1"]
 
-#this sends an exception email on production
-if DJANGO_IS_PRODUCTION :
+#this sends a critical email on production
+if DJANGO_IS_PRODUCTION:
     ADMINS = [
-        ("Administration", config('DJANGO_ADMIN_EMAIL_1', cast=str)),
+        ("Administration", email.strip()) for email in config("DJANGO_ADMIN_EMAILS", cast=str).split(",") if email.strip()
     ]
+
 
 SECURE_SSL_REDIRECT = DJANGO_IS_PRODUCTION #possible infinite redirect error
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')#when nginx does the SSL
