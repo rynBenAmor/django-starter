@@ -183,3 +183,11 @@ def raw_text(value):
     text = html.unescape(text)
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
+
+
+@register.filter
+def splitlines(value):
+    """
+    returns a list out of the string of characters broken by the \n
+    """
+    return value.splitlines()
