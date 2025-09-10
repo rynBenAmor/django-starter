@@ -191,3 +191,24 @@ def splitlines(value):
     returns a list out of the string of characters broken by the \n
     """
     return value.splitlines()
+
+
+
+@register.filter()
+def deslugify(value):
+    """
+    Converts slugs like 'hello-world_test--example' into 'hello world test example'.
+    Handles:
+    - Hyphens, underscores, and multiple separators
+    - Strips extra whitespace
+    """
+    if not isinstance(value, str):
+        return value
+
+    # Replace any non-alphanumeric separators (hyphens, underscores) with space
+    value = re.sub(r'[-_]+', ' ', value)
+
+    # Remove extra spaces if there are multiple in a row
+    value = re.sub(r'\s+', ' ', value).strip()
+
+    return ' '.join(word for word in value.split())
