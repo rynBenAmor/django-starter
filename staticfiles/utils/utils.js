@@ -5,6 +5,7 @@ export {
     // --- AJAX  ---
     loadPartial,
     fetchWithCSRF,
+    safeFetch,
 
     // --- Form helpers ---
     formValidate,
@@ -39,7 +40,6 @@ export {
     showElement,
     hideElement,
     copyElementText,
-    printSection,
 
     // --- DOM Helpers ---
     domIsReady,
@@ -55,6 +55,45 @@ async function loadPartial(url, targetSelector) {
     const target = document.querySelector(targetSelector);
     if (target) target.innerHTML = html;
 }
+
+
+async function safeFetch(url, options = {}) {
+    /*
+        Description : a custom fetch that auto handles errors and parsing
+        Usage:
+            const [error, data] = await safeFetch('/api/some-endpoint');
+            if (error) {
+            console.error('Request failed:', error.status, error.message);
+            } else {
+            console.log('Data received:', data);
+            }
+    */
+  try {
+    const response = await fetch(url, options);
+
+    // auto-parse JSON (like axios)
+    let data;
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = await response.text(); // fallback to text for non-JSON
+    }
+
+    if (!response.ok) {
+      // Build an error object
+      const error = new Error(`HTTP ${response.status}: ${response.statusText}`);
+      error.status = response.status;
+      error.data = data;
+      throw error;
+    }
+
+    return [null, data];
+  } catch (err) {
+    return [err, null];
+  }
+}
+
 
 
 function disableForm(form, state = true) {
@@ -344,16 +383,9 @@ function getCookie(name) {
 
 
 function getCSRFToken() {
-    //fetch CSRF token from the hidden input or meta tag
-    const input = document.querySelector('[name=csrfmiddlewaretoken]');
-    if (input && input.value) {
-        return input.value;
-    }
-
-    const meta = document.querySelector('meta[name="csrf-token"]');
-    return meta ? meta.getAttribute('content') : null;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    return csrfToken;
 }
-
 
 
 
@@ -563,59 +595,6 @@ function scrollToBottom(behavior = 'instant') {
 
 
 
-/**
- * Print a specific section of the page with custom options.
- * @param {Object} options
- * @param {string} options.sectionSelector - CSS selector for the section to print (required)
- * @param {string[]} [options.hideSelectors] - Array of selectors to hide during print
- * @param {string} [options.watermarkSelector] - Selector for watermark to show during print
- * @param {string} [options.extraPrintCSS] - Additional CSS to inject for print
- */
-function printSection({ sectionSelector, hideSelectors = [], watermarkSelector = null, extraPrintCSS = '' }) {
 
-    /** Usage example: 
-        document.getElementById('download-pdf-button')?.addEventListener('click', function () {
-            printSection({
-                sectionSelector: '#product-detail-section',
-                hideSelectors: ['#base-nav', '#product-detail-buttons', '#similar-products-section', 'footer'],
-                watermarkSelector: '#water-mark-logo',
-                extraPrintCSS: '' // Optional extra CSS
-            });
-        }); 
-    */
 
-    if (!sectionSelector) {
-        console.error('printSection: sectionSelector is required.');
-        return;
-    }
-
-    let hideCSS = '';
-    if (hideSelectors.length) {
-        hideCSS = `${hideSelectors.join(', ')} { display: none !important; }`;
-    }
-    let watermarkCSS = '';
-    if (watermarkSelector) {
-        watermarkCSS = `${watermarkSelector} { display: block !important; }`;
-    }
-
-    const style = document.createElement('style');
-    style.innerHTML = `
-        @media print {
-            body * { visibility: hidden !important; }
-            ${sectionSelector}, ${sectionSelector} * { visibility: visible !important; }
-            ${hideCSS}
-            ${watermarkCSS}
-            ${extraPrintCSS}
-        }
-    `;
-    document.head.appendChild(style);
-
-    const cleanup = () => {
-        document.head.removeChild(style);
-        window.removeEventListener('afterprint', cleanup);
-    };
-    window.addEventListener('afterprint', cleanup);
-
-    window.print();
-}
 
