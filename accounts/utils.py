@@ -1,3 +1,4 @@
+from email.policy import default
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.contrib.sites.shortcuts import get_current_site
@@ -6,6 +7,7 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.urls import reverse
 import time
+import secrets
 from django.conf import settings
 from django.utils.html import strip_tags
 from django.core.signing import TimestampSigner
@@ -38,9 +40,20 @@ import json
 # * ==========================================================
 
 
-def mask_email(email):
+def mask_email(email: str) -> str:
     """
-    Masks an email address for privacy.
+    Masks an email address for privacy, keeping only the first character of the username
+    and the full domain.
+
+    Args:
+        email (str): The email address to mask.
+
+    Returns:
+        str: Masked email.
+
+    Example:
+        >>> mask_email("johndoe@example.com")
+        'j*****@example.com'
     """
     if not email or "@" not in email:
         return email
@@ -50,7 +63,7 @@ def mask_email(email):
     return name[0] + "*" * (len(name) - 1) + "@" + domain
 
 
-def mask_string(s, visible_start=2, visible_end=2, mask_char="*"):
+def mask_string(s: str, visible_start: int = 2, visible_end: int = 2, mask_char: str = "*") -> str:
     """
     Masks the middle part of a string (e.g., for phone numbers or emails).
 
@@ -88,7 +101,7 @@ def get_client_ip(request):
         # In case of multiple IPs, take the first one
         ip = x_forwarded_for.split(",")[0].strip()
     else:
-        ip = request.META.get("REMOTE_ADDR")
+        ip = request.META.get("REMOTE_ADDR") or request.META.get("HTTP_X_REAL_IP")
     return ip
 
 
@@ -121,7 +134,8 @@ def random_string(length=12, chars=string.ascii_letters + string.digits):
     """
     Generates a random string of given length.
     """
-    return "".join(random.choices(chars, k=length))
+    # Use secrets.choice for cryptographic randomness when generating tokens
+    return "".join(secrets.choice(chars) for _ in range(length))
 
 
 def unique_slugify(instance, value, slug_field_name="slug"):
@@ -145,6 +159,7 @@ def unique_slugify(instance, value, slug_field_name="slug"):
 
 def normalize_dict_reader(reader):
     """
+    Defines a generator that normalizes keys in a CSV DictReader to lowercase and strips whitespace.
     usage:
         for row in normalize_dict_reader(reader):
             ref = row.get('name')
@@ -153,6 +168,20 @@ def normalize_dict_reader(reader):
     reader.fieldnames = [name.strip().lower() for name in reader.fieldnames]
     for row in reader:
         yield {k.strip().lower(): v for k, v in row.items()}
+
+
+
+def secure_random_code(length: int = 6, digits_only: bool = True) -> str:
+    """Return a cryptographically secure random code.
+
+    Uses the `secrets` module and is suitable for 2FA codes or short tokens.
+    """
+    if digits_only:
+        alphabet = '0123456789'
+    else:
+        alphabet = string.digits + string.ascii_letters
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
 
 
 # * ==========================================================
@@ -178,8 +207,15 @@ def request_rate_limit(
     if request.user.is_authenticated:
         identifier = str(request.user.pk)
     else:
-        # Use session key or fallback to a random UUID if no session
-        identifier = request.session.session_key or uuid.uuid4().hex
+        # Ensure session exists (creates one if using cookie-based sessions)
+        session_key = request.session.session_key
+        if not session_key:
+            try:
+                request.session.save()
+            except Exception:
+                # Fallback to a per-process identifier if sessions cannot be created
+                session_key = None
+        identifier = session_key or uuid.uuid4().hex
 
     cache_key = f"rate_limit:{key}:{identifier}"
     count = cache.get(cache_key, 0)
@@ -204,6 +240,23 @@ def safe_redirect(request, url, fallback_url="/"):
     if url and url_has_allowed_host_and_scheme(url, allowed_hosts={request.get_host()}):
         return redirect(url)
     return redirect(fallback_url)
+
+
+def safe_parse(data: str, default=None):
+    """
+        Safely parses a JSON string, returning a default value if parsing fails.
+
+        Args:
+            data (str): JSON string to parse.
+            default: Value to return on failure (default: None).
+
+        Returns:
+            dict | list | Any: Parsed object or default.
+    """
+    try:
+        return json.loads(data)
+    except (ValueError, TypeError):
+        return default
 
 
 # * ==========================================================
@@ -556,14 +609,18 @@ class SpamDetector:
 # * ==========================================================
 
 
-def not_authenticated_required(view_func):
-    @wraps(view_func)
-    def _wrapped_view(request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return redirect("accounts:profile")
-        return view_func(request, *args, **kwargs)
+def not_authenticated_required(next_url= None):
 
-    return _wrapped_view
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            if request.user.is_authenticated:
+                return redirect(f"{next_url}")
+            return view_func(request, *args, **kwargs)
+
+        return _wrapped_view
+    
+    return decorator
 
 
 def ajax_required(header_name="X-Requested-With", header_value="XMLHttpRequest"):
@@ -585,6 +642,59 @@ def ajax_required(header_name="X-Requested-With", header_value="XMLHttpRequest")
 
         return _wrapped_view
 
+    return decorator
+
+
+def atomic_transaction(func=None):
+    """
+    Decorator to run a function inside a Django atomic transaction.
+
+    Works both with and without parentheses:
+
+    Example:
+
+        @atomic_transaction()
+        def update_inventory():
+            ...
+    """
+    def _decorator(f):
+        @wraps(f)
+        def _wrapped(*args, **kwargs):
+            with transaction.atomic():
+                return f(*args, **kwargs)
+        return _wrapped
+
+    if func is None:
+        return _decorator
+    return _decorator(func)
+
+
+def retry_on_exception(times: int = 3, exceptions=(Exception,), delay_seconds: float = 0.5):
+    """
+    Decorator to retry a function call on transient exceptions with linear backoff.
+
+    Args:
+        times (int): Maximum number of attempts (default: 3).
+        exceptions (tuple): Exception classes to catch (default: (Exception,)).
+        delay_seconds (float): Base delay between retries in seconds.
+            The actual wait time increases linearly: delay_seconds * attempt.
+
+    Example:
+        @retry_on_exception(times=3, exceptions=(IOError,))
+        def some_view():
+            ...
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapped(*args, **kwargs):
+            for attempt in range(1, times + 1):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions:
+                    if attempt == times:
+                        raise  # re-raise the last exception
+                    time.sleep(delay_seconds * attempt)
+        return wrapped
     return decorator
 
 
@@ -696,12 +806,11 @@ def send_2fa_code(request, user, subject="Your 2FA Code", email_template=None):
     request.session["2fa_code"] = code
     request.session["2fa_created_at"] = int(time.time())
 
-    html_message = render_to_string(
-        f"{email_template}",
-        {
-            "code": code,
-        },
-    )
+    # If no template is provided, use a minimal default HTML body
+    if email_template:
+        html_message = render_to_string(email_template, {"code": code})
+    else:
+        html_message = f"<p>Your authentication code is <strong>{code}</strong></p>"
 
     plain_message = strip_tags(html_message)
 
@@ -775,6 +884,34 @@ class EmailMATemplate:
         return email
 
 
+
+
+def email_send_safe(subject: str, html_message: str, to: list, from_email: str = None, fail_silently: bool = True, connection=None):
+    """Wrapper around EmailMultiAlternatives that logs failures and optionally re-raises.
+
+    Returns the EmailMultiAlternatives instance on success, or None on failure when
+    fail_silently is True.
+    """
+    from django.core.mail import EmailMultiAlternatives
+    import logging
+
+    logger = logging.getLogger(__name__)
+    from_email = from_email or settings.DEFAULT_FROM_EMAIL
+    text_body = strip_tags(html_message)
+
+    try:
+        email = EmailMultiAlternatives(subject=subject, body=text_body, from_email=from_email, to=to, connection=connection)
+        email.attach_alternative(html_message, 'text/html')
+        email.send()
+        return email
+    except Exception as exc:
+        logger.exception('Failed to send email to %s', to)
+        if not fail_silently:
+            raise
+        return None
+
+
+
 class GenerateUniqueFileName:
     """
     A callable class for Django's `upload_to` parameter that generates a unique file path
@@ -820,3 +957,5 @@ class GenerateUniqueFileName:
             [self.base_folder],  # positional args
             {},  # keyword args
         )
+
+

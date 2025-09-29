@@ -1,5 +1,4 @@
 from django.contrib.auth.models import BaseUserManager
-from .querysets import SoftDeleteQuerySet
 from django.db import models
 
 
@@ -33,14 +32,3 @@ class CustomUserManager(BaseUserManager):
         return user
     
 
-
-
-class SoftDeleteModelManager(models.Manager):
-    def get_queryset(self):
-        return SoftDeleteQuerySet(self.model, using=self._db).alive()
-
-    def deleted(self):
-        return SoftDeleteQuerySet(self.model, using=self._db).deleted()
-
-    def all_with_deleted(self):
-        return SoftDeleteQuerySet(self.model, using=self._db)
