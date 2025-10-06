@@ -647,15 +647,22 @@ def ajax_required(header_name="X-Requested-With", header_value="XMLHttpRequest")
 
 def atomic_transaction(func=None):
     """
-    Decorator to run a function inside a Django atomic transaction.
+    Decorator ensures that all database operations inside the function either succeed together or fail together
 
     Works both with and without parentheses:
 
     Example:
 
-        @atomic_transaction()
-        def update_inventory():
-            ...
+        @atomic_transaction
+        def transfer_funds(sender, receiver, amount):
+            sender.balance -= amount
+            sender.save()
+
+            receiver.balance += amount
+            receiver.save()
+
+            if receiver.balance > 1_000_000:  # simulate error
+                raise ValueError("Suspicious balance!")
     """
     def _decorator(f):
         @wraps(f)
