@@ -274,16 +274,16 @@ else:
 
 
 # *--------------------------------------------------------------------
-# * Extras
+# * Payment 
 # *--------------------------------------------------------------------
-
+"""
 #https://flouci.stoplight.io/docs/flouci-payment-apis/455b330c10e0d-en-flouci-payment-api
 FLOUCI_APP_TOKEN = config('FLOUCI_APP_TOKEN', cast=str, default=None)
 FLOUCI_APP_SECRET = config('FLOUCI_APP_SECRET', cast=str, default=None)
 
 #https://www.paymee.tn/paymee-integration-with-redirection/
 PAYMEE_API_KEY = config('PAYMEE_API_KEY', cast=str, default=None)
-
+"""
 # * ----------------------------------------------------------------------------------------------------------
 # * Development auto reload
 # * ----------------------------------------------------------------------------------------------------------

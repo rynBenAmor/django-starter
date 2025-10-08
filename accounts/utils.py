@@ -1,38 +1,42 @@
-from email.policy import default
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode
-from django.contrib.sites.shortcuts import get_current_site
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.utils.encoding import force_bytes
-from django.urls import reverse
-import time
-import secrets
-from django.conf import settings
-from django.utils.html import strip_tags
-from django.core.signing import TimestampSigner
-from django.core.mail import EmailMultiAlternatives
-from django.shortcuts import redirect, get_object_or_404
-from functools import wraps
-import uuid
 import os
-from django.utils.timezone import now
-import datetime
-from django.db.models.fields.files import FieldFile
-import string
-from django.db import transaction, IntegrityError
-from django.http import HttpResponseBadRequest
-from django.utils.text import slugify
-from django.utils.http import url_has_allowed_host_and_scheme
 import re
-import random
-import unicodedata
-from django.core.files.uploadedfile import UploadedFile
-from django.core.cache import cache
-from typing import Pattern, Set
+import time
 import json
+import uuid
+import string
+import random
+import secrets
+import datetime
+import logging
+import unicodedata
+from functools import wraps
+from typing import Set
+
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.cache import cache
+from django.core.exceptions import PermissionDenied
+from django.core.files.uploadedfile import UploadedFile
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.core.signing import TimestampSigner
+from django.db import transaction, IntegrityError
+from django.db.models.fields.files import FieldFile
+from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden
+from django.shortcuts import redirect, get_object_or_404
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils.encoding import force_bytes
+from django.utils.html import strip_tags
+from django.utils.http import urlsafe_base64_encode, url_has_allowed_host_and_scheme
+from django.utils.text import slugify
+from django.utils.timezone import now
+
+# Logger
+logger = logging.getLogger(__name__)
 
 # ?-----------------------------end imports-------------------
+
 
 
 # * ==========================================================
@@ -705,6 +709,42 @@ def retry_on_exception(times: int = 3, exceptions=(Exception,), delay_seconds: f
     return decorator
 
 
+def staff_member_or_denied(status_code=404, redirect_url=None, log_attempts=False):
+    """
+    Decorator for views that checks if the user is authenticated and is a staff member.
+    If not:
+      - redirects to `redirect_url` if given,
+      - or raises the specified status_code (404 by default),
+      - optionally logs unauthorized access attempts.
+    """
+
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            if not request.user.is_authenticated or not request.user.is_staff:
+                if log_attempts:
+                    logger.warning(
+                        "Unauthorized access attempt by %s to %s",
+                        request.user if request.user.is_authenticated else "anonymous",
+                        request.path
+                    )
+
+                if redirect_url:
+                    return redirect(redirect_url)
+
+                match status_code:
+                    case 403:
+                        raise PermissionDenied
+                    case 404:
+                        raise Http404
+                    case _:
+                        return HttpResponseForbidden()
+
+            return view_func(request, *args, **kwargs)
+        return _wrapped_view
+    return decorator
+
+
 # * ==========================================================
 # * Models and queries
 # * ==========================================================
@@ -891,18 +931,12 @@ class EmailMATemplate:
         return email
 
 
-
-
 def email_send_safe(subject: str, html_message: str, to: list, from_email: str = None, fail_silently: bool = True, connection=None):
     """Wrapper around EmailMultiAlternatives that logs failures and optionally re-raises.
 
     Returns the EmailMultiAlternatives instance on success, or None on failure when
     fail_silently is True.
     """
-    from django.core.mail import EmailMultiAlternatives
-    import logging
-
-    logger = logging.getLogger(__name__)
     from_email = from_email or settings.DEFAULT_FROM_EMAIL
     text_body = strip_tags(html_message)
 
@@ -916,7 +950,6 @@ def email_send_safe(subject: str, html_message: str, to: list, from_email: str =
         if not fail_silently:
             raise
         return None
-
 
 
 class GenerateUniqueFileName:

@@ -11,6 +11,7 @@ def strict_static(path):
     A stricter version of {% static %}:
     - In DEBUG mode, raises an error if file does not exist.
     - In production, behaves like normal {% static %}.
+    - This helps avoiding an breaking error in production (static returns a 404 in DEBUG mode but 500 in production)
     """
     url = django_static(path)
 

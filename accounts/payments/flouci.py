@@ -4,11 +4,8 @@ import json
 from django.conf import settings
 
 
-# ! Important: this is a Fire And Forget workflow:
-# The end user enters their payment credentials directly on Flouci’s hosted page, not on your platform.
-# 
 # This function only creates a payment "template" or session request:
-# - You specify yourself as the receiver (via your app credentials).
+# - You specify yourself as the receiver (via your app credentials: settings.FLOUCI_APP_TOKEN, settings.FLOUCI_APP_SECRET).
 # - You define the payment amount and provide redirect URLs.
 # 
 # If Flouci approves the request (i.e., data['result']['success'] is True),
@@ -18,7 +15,7 @@ from django.conf import settings
 # Your platform does NOT handle or collect any payment credentials.
 # 
 # Flouci is responsible for processing the transaction and will redirect (that's why no credit card params)
-# the user to the success or fail URL you provided based on the outcome.
+# Response: the user to the success or fail URL you provided based on the outcome.
 
 
 def generate_flouci_payment(amount, success_link, fail_link, tracking_id=None, accept_card=True, timeout_secs=1200):
