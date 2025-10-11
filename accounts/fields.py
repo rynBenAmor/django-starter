@@ -4,6 +4,9 @@ from django import forms
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from .widgets import KeyValueWidget, ColorPickerWidget
+import logging
+
+logger = logging.getLogger(__name__)
 # ? ----------------------------------------------------------------
 # ? end imports
 # ? ----------------------------------------------------------------
@@ -20,7 +23,7 @@ class HoneyPotField(forms.CharField):
         kwargs.setdefault('required', False)
         kwargs.setdefault('label', '')
         kwargs.setdefault('widget', forms.TextInput(attrs={
-            'style': 'height:0;width:0;opacity:0;visibility:hidden;position:absolute;left:-9999px;z-index:-99999;',
+            'style': 'height:0 !important;width:0 !important;opacity:0 !important;visibility:hidden !important;position:absolute !important;left:-9999px !important;z-index:-99999 !important;',
             'autocomplete': 'off',
             'tabindex': '-1',
         }))
@@ -29,8 +32,10 @@ class HoneyPotField(forms.CharField):
     def clean(self, value):
         value = super().clean(value)
         if value:
-            raise forms.ValidationError("Spam detected", code='honeypot')
+            logger.warning(f"Honeypot triggered with value: {value}")
+            raise forms.ValidationError("Honeypot Spam detected", code='honeypot')
         return value
+
 
 
 

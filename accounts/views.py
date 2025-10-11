@@ -30,7 +30,7 @@ from .models import User
 
 def verify_email(request, uidb64, token, signed_ts):
 
-    TOKEN_EXPIRATION_TIME = 86400  # 1 day
+    TOKEN_EXPIRATION_TIME = 24*3600  # 1 day
     signer = TimestampSigner()
 
     try:
