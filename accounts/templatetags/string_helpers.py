@@ -1,3 +1,4 @@
+import string
 from django import template
 from django.utils.html import strip_tags as dj_strip_tags
 from django.utils.text import slugify as dj_slugify
@@ -174,15 +175,45 @@ def center(value, args):
         return value
 
 
-@register.filter(name='raw_text')
+
+@register.filter(name="raw_text")
 def raw_text(value):
-    """ completely strip html tags and normalize whitespace (useful in richTextField) """
+    """
+    Template filter that converts HTML to clean plain text:
+    - strips HTML tags and entities
+    - removes emojis and high-plane unicode
+    - keeps alphanumeric, punctuation, spaces, and French accented chars
+    - collapses multiple spaces/newlines
+    """
     if not value:
-        return ''
+        return ""
+
+    # Step 1: strip HTML and decode entities
     text = strip_tags(value)
     text = html.unescape(text)
-    text = re.sub(r'\s+', ' ', text)
+
+    # Step 2: normalize whitespace
+    text = re.sub(r"[\r\n\t]+", " ", text)
+
+    # Step 3: remove emojis and exotic unicode symbols
+    text = re.sub(r"[\U00010000-\U0010ffff]", "", text)
+
+    # Step 4: keep allowed characters (letters, digits, punctuation, space, French accents)
+    allowed_chars = (
+        string.ascii_letters
+        + string.digits
+        + string.punctuation
+        + " "
+        + "éèêëàâäôöûüùçÉÈÊËÀÂÄÔÖÛÜÙÇ"
+    )
+    text = "".join(ch for ch in text if ch in allowed_chars)
+
+    # Step 5: collapse multiple spaces
+    text = re.sub(r"\s{2,}", " ", text)
+
     return text.strip()
+
+
 
 
 @register.filter

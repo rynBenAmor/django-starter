@@ -23,7 +23,7 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.core.signing import TimestampSigner
 from django.db import transaction, IntegrityError
 from django.db.models.fields.files import FieldFile
-from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden, HttpRequest
 from django.shortcuts import redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -97,19 +97,6 @@ def mask_string(s: str, visible_start: int = 2, visible_end: int = 2, mask_char:
         )
     except Exception:
         return s  # fallback if something weird happens
-
-
-def get_client_ip(request):
-    """
-    Returns the real client IP address, accounting for common proxy headers.
-    """
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-    if x_forwarded_for:
-        # In case of multiple IPs, take the first one
-        ip = x_forwarded_for.split(",")[0].strip()
-    else:
-        ip = request.META.get("REMOTE_ADDR") or request.META.get("HTTP_X_REAL_IP")
-    return ip
 
 
 def humanize_timedelta(dt):
@@ -190,6 +177,33 @@ def secure_random_code(length: int = 6, digits_only: bool = True) -> str:
     return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
+def raw_text(value: str) -> str:
+    """
+    Clean a text string by removing emojis, newlines, and non-alphanumeric/punctuation characters.
+
+    Args:
+        value (str): The input text.
+
+    Returns:
+        str: A cleaned string containing only letters, digits, punctuation, and spaces.
+    """
+    if not isinstance(value, str):
+        return ""
+
+    # Replace newlines and tabs with a space
+    text = re.sub(r'[\r\n\t]+', ' ', value)
+
+    # Remove emojis and other non-standard unicode symbols
+    text = re.sub(r'[\U00010000-\U0010ffff]', '', text)
+
+    # Keep only alphanumeric, punctuation, and spaces
+    allowed = string.ascii_letters + string.digits + string.punctuation + " " + "éèêëàâäôöûüùçÉÈÊËÀÂÄÔÖÛÜÙÇ"
+    text = ''.join(ch for ch in text if ch in allowed)
+
+    # Collapse multiple spaces
+    text = re.sub(r'\s{2,}', ' ', text)
+
+    return text.strip()
 
 # * ==========================================================
 # * URLS and api
@@ -265,6 +279,27 @@ def safe_parse(data: str, default=None):
     except (ValueError, TypeError):
         return default
 
+
+def get_request_ip(request: HttpRequest) -> str:
+    """
+    Return the real client IP address, even behind a reverse proxy.
+    """
+    # Common headers set by proxies (order matters)
+    headers_to_check = [
+        'HTTP_X_FORWARDED_FOR',  # can be a list: client, proxy1, proxy2
+        'HTTP_X_REAL_IP',        # often set by Nginx
+        'REMOTE_ADDR',           # direct connection fallback
+    ]
+
+    for header in headers_to_check:
+        ip = request.META.get(header)
+        if ip:
+            # If X-Forwarded-For has multiple IPs, take the first (the client)
+            if header == 'HTTP_X_FORWARDED_FOR':
+                ip = ip.split(',')[0].strip()
+            return ip
+
+    return ''
 
 # * ==========================================================
 # * Checkers
@@ -423,7 +458,7 @@ def validate_image_aspectratio(
     portrait_required: bool = False,
     landscape_required: bool = False,
     ratio_type: str = "width/height"  # or "height/width"
-):
+    ):
     """
     Validate that an uploaded image is portrait-oriented (height > width)
     and has a height/width ratio within a given range.
