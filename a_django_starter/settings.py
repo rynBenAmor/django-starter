@@ -290,3 +290,8 @@ PAYMEE_API_KEY = config('PAYMEE_API_KEY', cast=str, default=None)
 if DJANGO_BROWSER_RELOAD and DEBUG:
     INSTALLED_APPS += ['django_browser_reload']
     MIDDLEWARE += ["django_browser_reload.middleware.BrowserReloadMiddleware"]
+
+# * ----------------------------------------------------------------------------------------------------------
+# * Extras
+# * ----------------------------------------------------------------------------------------------------------
+SITE_DOMAIN_PREFIX = "https://mywebsite.com" if DEBUG else "http://127.0.0.1" # can be used to resolve a full url
