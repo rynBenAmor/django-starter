@@ -1,4 +1,4 @@
-{% load static i18n %}
+{% load static strict_static i18n %}
 <!DOCTYPE html>
 <html lang="{{current_language_key|default:"fr"}}">
 <head>
@@ -9,48 +9,35 @@
 
     <meta name="csrf-token" content="{{ csrf_token }}">
 
+    <!--TODO: import font-awesome locally with/without vite -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
     <!--bootstrap css-->
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% strict_static 'style.css' %}">
 
-    <link rel="icon" type="image/png" href="{% static 'favicon.png' %}">
+    <link rel="icon" type="image/x-icon" href="{% strict_static 'favicon.ico' %}">
 
-    <title>{% block title %}default page title{% endblock title %}</title>    
+    <title>{% block title %}Django starter{% endblock title %}</title>    
 
 
-    <!-- Default SEO Meta Tags (Can be overridden in specific templates) -->
-    {% block seo_description %}
-        <meta name="description" content="">
-    {% endblock seo_description %}
-
-    <meta name="keywords" content="{% block seo_extra_keywords %}{% endblock seo_extra_keywords %}">
     <meta name="author" content="Rayen Ben Amor">
     <meta name="robots" content="index, follow">              
-    <link rel="canonical" href="{{request.build_absolute_uri}}">                
+    <link rel="canonical" href="{{request.build_absolute_uri}}">                   
     
-    <!-- Open Graph Meta Tags image minimum recommended size: 1200x630 pixels -->
-    {% block og_title %}
-        <meta property="og:title" content="">
-    {% endblock og_title %}
+    {% block meta %}
+        <!--regular meta tags-->
+        <meta name="description" content="a Django starter project">
+        <meta property="og:title" content="Django starter">
 
-    {% block og_description %}
-        <meta property="og:description" content="">
-    {% endblock og_description %}
-    
-    {% block og_image %}
-        <meta property="og:image" content="https://{{ request.get_host }}{% static 'big-image.webp' %}">
-    {% endblock og_image %}
+        <!--open graph meta tags-->
+        <meta property="og:description" content="a Django starter project">
+        <meta property="og:image" content="{{request.scheme}}://{{ request.get_host }}/some-image-path-preferably-1200x630px.jpg">
+    {% endblock meta %}
+
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:type" content="image/webp">
-    <meta property="og:image:alt" content="Django Starter Template">
-    <meta property="og:image:secure_url" content="https://{{ request.get_host }}{% static 'big-image.webp' %}">
 
-    <meta property="og:site_name" content="django_starter.fake">
-    <meta property="og:locale" content="{{ current_language_key|default:"fr" }}">
-    <meta property="og:locale:alternate" content="en">
-    <meta property="og:locale:alternate" content="fr">
+    <meta property="og:site_name" content="django-starter.fake">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:type" content="website">
 
@@ -58,18 +45,162 @@
     <!-- Structured Data -->
     {% block structured_data %}
         <script type="application/ld+json">
-        {
+            {
             "@context": "https://schema.org",
-            "@type": "Organization",
-            "name": "",
-            "url": "{{ request.build_absolute_uri }}",
-            "description": "",
-            "logo": "https://{{ request.get_host }}{% static 'logo.png' %}",
-            "sameAs": [
-                "https://www.facebook.com/your-profile",        
-                "https://www.linkedin.com/company/your-profile"
+            "@graph": [
+                {
+                "@type": "LocalBusiness",
+                "@id": "{{website_url}}/#organization",
+                "name": "{{business_name}}",
+                "alternateName": "{{alternate_name}}",
+                "url": "{{website_url}}",
+                "logo": "{{website_url}}/images/logo.png",
+                "image": [
+                    "{{website_url}}/images/storefront.jpg",
+                    "{{website_url}}/images/interior.jpg"
+                ],
+                "description": "{{short_business_description}}",
+                "email": "mailto:{{business_email}}",
+                "telephone": "{{business_phone}}",
+                "priceRange": "{{price_range}}",
+                "paymentAccepted": ["Cash", "Credit Card", "Mobile Pay"],
+                "currenciesAccepted": "{{currency_code}}",
+                "hasMap": "{{google_maps_link}}",
+                "sameAs": [
+                    "{{facebook_url}}",
+                    "{{instagram_url}}",
+                    "{{linkedin_url}}",
+                    "{{google_business_profile_url}}"
+                ],
+                "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "{{street_address}}",
+                    "addressLocality": "{{city}}",
+                    "addressRegion": "{{region}}",
+                    "postalCode": "{{postal_code}}",
+                    "addressCountry": "{{country_code}}"
+                },
+                "geo": {
+                    "@type": "GeoCoordinates",
+                    "latitude": "{{latitude}}",
+                    "longitude": "{{longitude}}"
+                },
+                "openingHoursSpecification": [
+                    {
+                    "@type": "OpeningHoursSpecification",
+                    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                    "opens": "09:00",
+                    "closes": "18:00"
+                    },
+                    {
+                    "@type": "OpeningHoursSpecification",
+                    "dayOfWeek": "Saturday",
+                    "opens": "10:00",
+                    "closes": "16:00"
+                    }
+                ],
+                "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "ratingValue": "{{average_rating}}",
+                    "reviewCount": "{{review_count}}",
+                    "bestRating": "5",
+                    "worstRating": "1"
+                },
+                "review": [
+                    {
+                    "@type": "Review",
+                    "reviewRating": { "@type": "Rating", "ratingValue": "5" },
+                    "author": { "@type": "Person", "name": "Happy Customer" },
+                    "reviewBody": "Fantastic service and friendly staff. Highly recommend!"
+                    }
+                ],
+                "hasOfferCatalog": {
+                    "@type": "OfferCatalog",
+                    "name": "Our Services",
+                    "itemListElement": [
+                    {
+                        "@type": "Offer",
+                        "itemOffered": {
+                        "@type": "Service",
+                        "name": "{{service_1_name}}",
+                        "description": "{{service_1_description}}"
+                        }
+                    },
+                    {
+                        "@type": "Offer",
+                        "itemOffered": {
+                        "@type": "Service",
+                        "name": "{{service_2_name}}",
+                        "description": "{{service_2_description}}"
+                        }
+                    }
+                    ]
+                }
+                },
+                {
+                "@type": "WebSite",
+                "@id": "{{website_url}}/#website",
+                "url": "{{website_url}}",
+                "name": "{{website_name}}",
+                "description": "{{website_description}}",
+                "inLanguage": ["{{language_code}}"],
+                "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": "{{website_url}}/search?q={search_term_string}",
+                    "query-input": "required name=search_term_string"
+                }
+                },
+                {
+                "@type": "WebPage",
+                "@id": "{{website_url}}/#webpage",
+                "url": "{{website_url}}",
+                "name": "{{page_title}}",
+                "isPartOf": { "@id": "{{website_url}}/#website" },
+                "about": { "@id": "{{website_url}}/#organization" },
+                "primaryImageOfPage": "{{website_url}}/images/featured.jpg"
+                },
+                {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "{{website_url}}"
+                    },
+                    {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "{{page_name}}",
+                    "item": "{{website_url}}/{{page_slug}}"
+                    }
+                ]
+                },
+                {
+                "@type": "FAQPage",
+                "@id": "{{website_url}}/#faq",
+                "mainEntity": [
+                    {
+                    "@type": "Question",
+                    "name": "{{faq_question_1}}",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "{{faq_answer_1}}"
+                    }
+                    },
+                    {
+                    "@type": "Question",
+                    "name": "{{faq_question_2}}",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "{{faq_answer_2}}"
+                    }
+                    }
+                ]
+                }
             ]
-        }
+            }
+
         </script>
     {% endblock structured_data %}
 
@@ -104,7 +235,7 @@
     {% include 'includes/footer.html' %}
 
     <!--bootstrap js-->
-    <script src="{% static 'main.js' %}" defer></script>
+    <script src="{% strict_static 'main.js' %}" defer></script>
 
     {% block extra_js %}{% endblock extra_js %}       
 
