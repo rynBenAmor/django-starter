@@ -7,6 +7,7 @@ import string
 import random
 import secrets
 import datetime
+import ipaddress
 import logging
 import unicodedata
 from functools import wraps
@@ -263,7 +264,7 @@ def safe_redirect(request, url, fallback_url="/"):
     return redirect(fallback_url)
 
 
-def safe_parse(data: str, default=None):
+def safe_json_parse(data: str, default=None):
     """
         Safely parses a JSON string, returning a default value if parsing fails.
 
@@ -300,6 +301,27 @@ def get_request_ip(request: HttpRequest) -> str:
             return ip
 
     return ''
+
+
+def is_ipv4_address(ip: str) -> bool:
+    try:
+        return isinstance(ipaddress.ip_address(ip), ipaddress.IPv4Address)
+    except ValueError:
+        return False
+
+
+def is_ipv6_address(ip: str) -> bool:
+    try:
+        return isinstance(ipaddress.ip_address(ip), ipaddress.IPv6Address)
+    except ValueError:
+        return False
+
+
+def is_public_ip(ip: str) -> bool:
+    try:
+        return ipaddress.ip_address(ip).is_global
+    except ValueError:
+        return False
 
 # * ==========================================================
 # * Checkers
