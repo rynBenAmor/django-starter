@@ -19,12 +19,6 @@ def strict_static(path, absolute=False):
     if settings.DEBUG:
         resolved = finders.find(path)
 
-        # Try static root as fallback
-        # Note that it may render an image that you think you deleted (from static/) if STATIC_ROOT isn't up to date (can remove this block)
-        if not resolved and settings.STATIC_ROOT:
-            candidate = os.path.join(settings.STATIC_ROOT, path)
-            if os.path.exists(candidate):
-                resolved = candidate
 
         if not resolved or not os.path.exists(resolved):
             raise FileNotFoundError(f"Static file not found: '{path}'")
