@@ -209,7 +209,7 @@
 </head>
 
 
-<body data-bs-theme="light" class="overflow-x-hidden">
+<body data-bs-theme="light">
 
     {% include 'includes/navbar.html' %}
     
@@ -218,10 +218,6 @@
     <!--main content-->
     <main>
 
-        <h3 class="h4 text-primary text-center my-3">
-             DEBUG: view resolver used is  
-             <span class="badge bg-info fw-bold text-dark">{{ request.resolver_match.view_name }}</span> 
-        </h3>
 
         {% block content %}
         

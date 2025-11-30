@@ -1,6 +1,6 @@
 {% load i18n %}
 {% if messages %}
-<div id="toast-container" class="position-fixed bottom-0 start-0 p-3" style="z-index: 1055;">
+<div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
     {% for message in messages %}
     <div class="toast show mb-3 shadow-lg {% if message.level_tag %}bg-{{ message.level_tag }}{% else %}bg-light{% endif %}" 
          role="alert" 

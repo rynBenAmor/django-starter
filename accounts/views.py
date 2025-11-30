@@ -22,7 +22,9 @@ from django.contrib.auth.decorators import login_required
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 
 from .forms import LoginForm, LanguageTogglerForm
-from .utils import send_verification_email, not_authenticated_required, send_2fa_code, ajax_required
+from .utils.decorators import not_authenticated_required, ajax_required
+from .utils.email_utils import send_verification_email, send_2fa_code
+
 from .models import User
 
 
