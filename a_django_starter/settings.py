@@ -38,7 +38,7 @@ SECRET_KEY = DJANGO_SECRET_KEY
 
 DEBUG = not DJANGO_IS_PRODUCTION
 
-HTML_MINIFY = True #django-htmlmin
+HTML_MINIFY = not DEBUG #django-htmlmin
 
 ALLOWED_HOSTS = DJANGO_ALLOWED_HOSTS
 
@@ -63,8 +63,7 @@ CSRF_COOKIE_SECURE = DJANGO_IS_PRODUCTION #Ensure CSRF cookies are only sent ove
 CSRF_TRUSTED_ORIGINS = [    
         "http://localhost:8000",
         "http://127.0.0.1:8000",  
-        #..add domain in production..#
-    ]
+    ] + [f"https://{host}" for host in DJANGO_ALLOWED_HOSTS]
 CSRF_COOKIE_HTTPONLY = True
 CSRF_FAILURE_VIEW = "accounts.views.csrf_failure"#to override django's 403_csrf.html in django.views.csrf.csrf_failure
 
@@ -203,7 +202,6 @@ LANGUAGES = [
 
 TIME_ZONE = 'Africa/Tunis'
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#locale-paths
@@ -294,4 +292,4 @@ if DJANGO_BROWSER_RELOAD and DEBUG:
 # * ----------------------------------------------------------------------------------------------------------
 # * Extras
 # * ----------------------------------------------------------------------------------------------------------
-SITE_DOMAIN_PREFIX = "https://mywebsite.com" if DEBUG else "http://127.0.0.1" # can be used to resolve a full url
+SITE_DOMAIN_PREFIX = "https://mywebsite.com" if not DEBUG else "http://127.0.0.1:8000" # can be used to resolve a full url
