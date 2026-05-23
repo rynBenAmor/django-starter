@@ -1,5 +1,7 @@
 from .fields import HoneyPotField
 from django.contrib import messages
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 # ? ----------------------------------------------------------------
 # ? end imports
 # ? ----------------------------------------------------------------
@@ -84,6 +86,95 @@ class LowerTrimInputMixin:
         if isinstance(value, str):
             value = value.lower().strip()
         return value
+
+
+class UnsavedFormWarningMixin:
+    """
+    Adds a reusable unsaved-form warning for one HTML form.
+    Usage: place UnsavedFormWarningMixin inside your form class, and include {{ form.unsaved_form_warning_script|safe }} in your template.
+    Customize the warning message with `unsaved_warning_message` attribute or override `get_unsaved_warning_message()`.
+     - Optionally specify a form ID with `unsaved_form_warning_form_id` if you have multiple forms on the page (otherwise it will target the closest form).
+     - The script will automatically detect changes to form fields and prompt the user if they try to navigate away with unsaved changes. It also resets the warning state on form submission or reset.
+    
+    """
+
+    unsaved_warning_message = _("You have unsaved changes. Are you sure you want to leave?")
+    unsaved_form_warning_enabled = True
+    unsaved_form_warning_form_id = None
+
+    def __init__(self, *args, **kwargs):
+        self.unsaved_form_warning_form_id = kwargs.pop('unsaved_form_warning_form_id', None)
+        super().__init__(*args, **kwargs)
+
+    @property
+    def unsaved_form_warning_script(self):
+        if not self.unsaved_form_warning_enabled:
+            return ''
+
+        message = str(self.unsaved_warning_message).replace("'", "\\'").replace("\n", ' ')
+
+        if self.unsaved_form_warning_form_id:
+            form_lookup = f"document.querySelector('#{self.unsaved_form_warning_form_id}')"
+        else:
+            form_lookup = 'document.currentScript.closest("form")'
+
+        return mark_safe(f"""
+            <script>
+            (function() {{
+                const form = {form_lookup};
+                if (!form) return;
+
+                const initialData = new FormData(form);
+                let isDirty = false;
+
+                const checkDirty = () => {{
+                    const currentData = new FormData(form);
+                    const keys = new Set();
+
+                    for (const [key] of initialData) keys.add(key);
+                    for (const [key] of currentData) keys.add(key);
+
+                    for (const key of keys) {{
+                        const initialValues = initialData.getAll(key);
+                        const currentValues = currentData.getAll(key);
+
+                        if (initialValues.length !== currentValues.length) {{
+                            isDirty = true;
+                            return;
+                        }}
+
+                        for (let i = 0; i < initialValues.length; i++) {{
+                            if (initialValues[i] !== currentValues[i]) {{
+                                isDirty = true;
+                                return;
+                            }}
+                        }}
+                    }}
+
+                    isDirty = false;
+                }};
+
+                form.addEventListener('input', checkDirty);
+                form.addEventListener('change', checkDirty);
+                form.addEventListener('reset', () => {{
+                    setTimeout(() => {{ isDirty = false; }}, 0);
+                }});
+
+                form.addEventListener('submit', () => {{ isDirty = false; }});
+
+                window.addEventListener('beforeunload', (event) => {{
+                    if (!isDirty) return;
+                    event.preventDefault();
+                    event.returnValue = '{message}';
+                    return '{message}';
+                }});
+            }})();
+            </script>
+            """)
+
+    def __str__(self):
+        return mark_safe(super().__str__() + self.unsaved_form_warning_script)
+
 
 # *=================================================================
 # * CBV mixins

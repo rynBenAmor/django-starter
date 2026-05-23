@@ -1,7 +1,7 @@
 from django import forms
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
-from .mixins import HoneyPotMixin
+from .mixins import HoneyPotMixin, UnsavedFormWarningMixin
 
 # ? ----------------------------------------------------------------
 # ? end imports
@@ -17,7 +17,7 @@ class LanguageTogglerForm(forms.Form):
 
 
 
-class LoginForm(HoneyPotMixin, forms.Form):
+class LoginForm(HoneyPotMixin, UnsavedFormWarningMixin, forms.Form):
 
     email = forms.EmailField(max_length=255, required=True,
                              label=_("email"),

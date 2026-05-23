@@ -14,6 +14,9 @@
           <form method="post" action="{% url 'accounts:login' %}">
             {% csrf_token %}
 
+            <!--warning when leaving the form without saving -->
+            {{ form.unsaved_form_warning_script|safe }}
+
             {% if form.non_field_errors %}
             <div class="alert alert-danger rounded-3 shadow-sm">
                 <ul class="mb-0">
