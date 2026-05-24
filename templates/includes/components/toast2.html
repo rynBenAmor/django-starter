@@ -18,139 +18,164 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const toasts = document.querySelectorAll('.toast_v2');
-  const icons = {
-    success: "fa-circle-check",
-    error: "fa-circle-exclamation",
-    warning: "fa-triangle-exclamation",
-    info: "fa-circle-info",
-    debug: "fa-bug"
-  };
+  document.addEventListener('DOMContentLoaded', function () {
+    const toasts = document.querySelectorAll('.toast_v2');
+    const icons = {
+      success: "fa-circle-check",
+      error: "fa-circle-exclamation",
+      warning: "fa-triangle-exclamation",
+      info: "fa-circle-info",
+      debug: "fa-bug"
+    };
 
-  toasts.forEach((toast, index) => {
-    const tags = toast.dataset.tags || 'info';
-    const iconClass = icons[tags] || icons['info'];
-    const iconEl = toast.querySelector('.toast-icon');
-    const closeBtn = toast.querySelector('.toast-close');
-    const progressEl = toast.querySelector('.toast-progress');
+    toasts.forEach((toast, index) => {
+      const tags = toast.dataset.tags || 'info';
+      const iconClass = icons[tags] || icons['info'];
+      const iconEl = toast.querySelector('.toast-icon');
+      const closeBtn = toast.querySelector('.toast-close');
+      const progressEl = toast.querySelector('.toast-progress');
 
-    // Set icon
-    iconEl.className = `toast-icon fas ${iconClass}`;
+      // Set icon
+      iconEl.className = `toast-icon fas ${iconClass}`;
 
-    // Show toast
-    setTimeout(() => toast.classList.add('show'), 50);
+      // Show toast
+      setTimeout(() => toast.classList.add('show'), 50);
 
-    // Animate progress bar
-    if (progressEl) {
-      progressEl.style.animation = `progress 5000ms linear forwards`;
+      // Animate progress bar
+      if (progressEl) {
+        progressEl.style.animation = `progress 5000ms linear forwards`;
+      }
+
+      // Close button handler
+      closeBtn.addEventListener('click', () => dismissToast(toast));
+
+      // Auto-dismiss after 5s
+      setTimeout(() => dismissToast(toast), 5000);
+    });
+
+    function dismissToast(toast) {
+      if (!toast) return;
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
     }
-
-    // Close button handler
-    closeBtn.addEventListener('click', () => dismissToast(toast));
-
-    // Auto-dismiss after 5s
-    setTimeout(() => dismissToast(toast), 5000);
   });
-
-  function dismissToast(toast) {
-    if (!toast) return;
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
-  }
-});
 </script>
 
 <style>
-.toast-container {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1050;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+  .toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
 
-.toast_v2 {
+  .toast_v2 {
+    pointer-events: auto;
+    display: flex;
+    justify-content: flex-start;
+    /* fix clickable area */
+    align-items: center;
+    gap: 12px;
+    max-width: 350px;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateX(20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    position: relative;
+  }
 
-  display: flex;
-  justify-content: flex-start; /* fix clickable area */
-  align-items: center;
-  gap: 12px;
-  max-width: 350px;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transform: translateX(20px);
-  opacity: 0;
-  transition: all 0.3s ease;
-  position: relative;
-}
+  .toast_v2.show {
+    transform: translateX(0);
+    opacity: 1;
+  }
 
-.toast_v2.show {
-  transform: translateX(0);
-  opacity: 1;
-}
+  .toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-grow: 1;
+  }
 
-.toast-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-grow: 1;
-}
+  .toast-icon {
+    color: white;
+    font-size: 20px;
+  }
 
-.toast-icon {
-  color: white;
-  font-size: 20px;
-}
+  .toast-message-wrapper {
+    flex-grow: 1;
+    position: relative;
+    padding-bottom: 4px;
+  }
 
-.toast-message-wrapper {
-  flex-grow: 1;
-  position: relative;
-  padding-bottom: 4px;
-}
+  .toast-message {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+  }
 
-.toast-message {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.4;
-}
+  .toast-progress {
+    position: absolute;
+    pointer-events: none;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: rgba(255, 255, 255, 0.3);
+    transform-origin: left;
+  }
 
-.toast-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background-color: rgba(255,255,255,0.3);
-  transform-origin: left;
-}
+  @keyframes progress {
+    from {
+      transform: scaleX(1);
+    }
 
-@keyframes progress {
-  from { transform: scaleX(1); }
-  to { transform: scaleX(0); }
-}
+    to {
+      transform: scaleX(0);
+    }
+  }
 
-.toast-close {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  opacity: 0.8;
-  padding: 0 4px;
-}
+  .toast-close {
+    position: relative;
+    z-index: 1051;
+    /* just above the toast container */
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.8;
+    padding: 0 4px;
+  }
 
-.toast-close:hover {
-  opacity: 1;
-}
+  .toast-close:hover {
+    opacity: 1;
+    color: red;
+  }
 
-/* Variants */
-.toast-success { background-color: #28a745; }
-.toast-error { background-color: #dc3545; }
-.toast-warning { background-color: #fd7e14; }
-.toast-info { background-color: #17a2b8; }
-.toast-debug { background-color: #6c757d; }
+  /* Variants */
+  .toast-success {
+    background-color: #28a745;
+  }
+
+  .toast-error {
+    background-color: #dc3545;
+  }
+
+  .toast-warning {
+    background-color: #fd7e14;
+  }
+
+  .toast-info {
+    background-color: #17a2b8;
+  }
+
+  .toast-debug {
+    background-color: #6c757d;
+  }
 </style>
